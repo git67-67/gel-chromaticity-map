@@ -1,0 +1,48 @@
+# Build order of the JavaScript modules (one global scope, concatenated into one <script>).
+# `data NAME path` embeds a JSON file as `const NAME = ...;`.
+# Add a new module by adding a line here.
+
+# --- core: pure colour science, no DOM ---
+core/grid-cmf.js
+core/spectra.js
+core/locus.js
+core/display.js
+core/example-sources.js
+core/evaluate.js
+
+# --- metrics plug-ins (registry first, then one file per metric) ---
+metrics/registry.js
+metrics/peak-wavelength.js
+
+# --- app: colour map tab ---
+app/util.js
+app/state.js
+app/datasets.js
+data LEE_DATA data/lee.json
+app/datasets/lee.js
+data PIG_DATA data/pigments.json
+app/datasets/pigments.js
+app/import.js
+app/subset.js
+app/calc.js
+app/list.js
+app/theme.js
+app/map.js
+app/spectrum.js
+app/interaction.js
+
+# --- lab: adaptation lab tab ---
+lab/cat.js
+lab/state.js
+lab/sources.js
+lab/compute.js
+lab/view.js
+lab/draw.js
+lab/tooltip.js
+lab/panels.js
+lab/update.js
+lab/events.js
+lab/tabs.js
+
+# --- start-up, must be last ---
+boot.js

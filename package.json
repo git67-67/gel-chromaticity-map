@@ -1,0 +1,12 @@
+{
+  "name": "gel-chromaticity-map",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chromaticity of lighting filters and pigments, and a lab for comparing chromatic adaptation transforms.",
+  "scripts": {
+    "build": "python3 tools/build.py",
+    "check": "python3 tools/build.py --check",
+    "test": "python3 tools/build.py && node tests/maths.mjs && python3 tests/smoke.py"
+  },
+  "license": "MIT"
+}

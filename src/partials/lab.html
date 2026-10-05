@@ -1,0 +1,101 @@
+<div id="view-lab" hidden>
+<div class="lab">
+  <p class="intro tk">Pick two lights, A and B. Every {filter} becomes a colour under A and, from the real spectra, a true colour under B. A chromatic adaptation transform (CAT) only gets the colour under A plus the white points of both lights, and has to predict the result under B. The gap between its prediction and the spectral truth is the error measured here.</p>
+  <details class="panel">
+    <summary>How to read this tab</summary>
+    <div class="help">
+      <p class="tk"><b>What a CAT does.</b> It takes a colour as XYZ, the XYZ of the white under the old light and the XYZ of the white under the new light. It converts to a cone-like space, scales each of the three channels by new white divided by old white, and converts back. That is the idea you described.</p>
+      <p class="tk"><b>Why there is an error.</b> The CAT sees three numbers per colour. Two {filters} with different spectra can give the same XYZ under light A and different XYZ under light B. The CAT gives both the same answer, so it cannot be right for both.</p>
+      <p class="tk"><b>What "true" means.</b> The spectral result is {curveL} times the spectrum of light B, divided by the Y of white B. It is the colour relative to the white of light B, which is what a fully adapted viewer would see. That is the case a CAT with D = 1 tries to predict.</p>
+      <p class="tk"><b>The two views.</b> "One {filter}, all CATs" shows where each CAT lands compared with the true point. "All {filters}, one CAT" draws a whisker from every true point towards where the chosen CAT puts it. Whiskers are magnified so small errors become visible.</p>
+    </div>
+  </details>
+  <div class="ctl">
+    <section class="panel" id="lp-A"></section>
+    <section class="panel" id="lp-B"></section>
+    <section class="panel">
+      <h2>Degree of adaptation D</h2>
+      <div class="field" style="margin-top:0">
+        <label for="l-dmode">How D is set</label>
+        <select id="l-dmode"><option value="full">Complete adaptation (D = 1)</option><option value="view">From viewing conditions (CIECAM02)</option><option value="manual">Set by hand</option></select>
+      </div>
+      <div class="field" id="l-dview" hidden>
+        <label for="l-la"><span>Adapting luminance L<sub>A</sub></span><span><input type="number" id="l-la" min="1" max="10000" step="1" value="64"> cd/m²</span></label>
+        <label for="l-f"><span>Surround</span><select id="l-f"><option value="1">Average (F = 1.0)</option><option value="0.9">Dim (F = 0.9)</option><option value="0.8">Dark (F = 0.8)</option></select></label>
+      </div>
+      <div class="field" id="l-dman" hidden>
+        <label for="l-dr"><span>D</span><b id="l-dval2" style="font-family:var(--mono);font-weight:500;color:var(--fg)">1.00</b></label>
+        <input type="range" id="l-dr" min="0" max="1" step="0.01" value="1">
+      </div>
+      <div class="readout" style="grid-template-columns:repeat(2,minmax(0,1fr))"><div class="kv"><span>D in use</span><b id="l-dval">1.000</b></div></div>
+      <p class="hint">Use D = 1 to judge how well a CAT predicts the spectral result. A smaller D under-adapts on purpose, so the error then mostly shows the incomplete adaptation.</p>
+    </section>
+  </div>
+  <div class="grid">
+    <section class="stage">
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="View">
+          <button id="lm-one" aria-pressed="true" class="tk">One {filter}, all CATs</button>
+          <button id="lm-all" aria-pressed="false" class="tk">All {filters}, one CAT</button>
+        </div>
+        <div class="seg" role="group" aria-label="Diagram">
+          <button id="ls-uv" aria-pressed="true">u′v′</button>
+          <button id="ls-xy" aria-pressed="false">xy</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="toolrow" id="lt-one">
+          <button class="btn sm" id="lf-journey">Frame the journey</button>
+          <button class="btn sm" id="lf-err">Frame the errors</button>
+          <button class="btn sm" id="lf-whole">Whole diagram</button>
+          <label class="chk"><input type="checkbox" id="lc-follow" checked> <span class="tk">Zoom to errors when I pick a {filter}</span></label>
+        </div>
+        <div class="toolrow" id="lt-all" hidden>
+          <label class="magctl" for="lc-mag">Whisker magnification <input type="range" id="lc-mag" min="1" max="30" step="1" value="5"><b id="lc-magv">×5</b></label>
+          <label class="chk"><input type="checkbox" id="lc-shift"> Show the real shift A → B</label>
+        </div>
+        <div class="toolrow">
+          <label class="chk"><input type="checkbox" id="lc-planck" checked> Planckian locus</label>
+        </div>
+      </div>
+      <div class="plot" id="lplot">
+        <canvas id="lcv" aria-label="Chromaticity diagram comparing CAT predictions with spectral results"></canvas>
+        <div class="zoom"><button id="lz-in" aria-label="Zoom in">+</button><button id="lz-out" aria-label="Zoom out">−</button><button id="lz-fit" aria-label="Whole diagram" title="Whole diagram">⤢</button></div>
+        <div class="tip" id="ltip" hidden></div>
+      </div>
+      <div class="note" id="lnote"></div>
+      <div class="panel exp" id="lexp"></div>
+      <div class="panel">
+        <h2>Why a CAT cannot be exact</h2>
+        <canvas id="lsp" aria-label="Spectra of both lights, the filter, and the CAT's three sensitivities" data-tk-al="Spectra of both lights, the {filter}, and the CAT's three sensitivities"></canvas>
+        <div class="legend" id="lsplegend"></div>
+        <p class="hint tk">The {filter} and both lights are real spectra. The CAT sees them only through three broad, overlapping sensitivities (coloured, from the selected CAT's matrix). Spectra that give the same three numbers under A are indistinguishable to it, even when they split apart under B.</p>
+      </div>
+    </section>
+    <aside class="side">
+      <section class="panel">
+        <h2>Which CAT is closest?</h2>
+        <div id="lboard"></div>
+        <div class="bfoot">
+          <label for="lb-min" class="tk">Only {filters} {pass} ≥</label>
+          <select id="lb-min"><option value="0">0 %</option><option value="1">1 %</option><option value="5">5 %</option><option value="10">10 %</option><option value="25">25 %</option></select>
+          <label class="chk"><input type="checkbox" id="lb-neutral"> Skip near-neutral</label>
+        </div>
+        <p class="hint" id="lb-n"></p>
+      </section>
+      <section class="panel">
+        <h2><span class="tk">{Filters}</span> <span id="lcount" style="font-weight:400"></span></h2>
+        <div class="listhead">
+          <input type="search" id="lq" placeholder="Search name or number" aria-label="Search filters" data-tk-ph="{search}" data-tk-al="Search {filters}">
+          <select id="l-sort" aria-label="Sort filters" data-tk-al="Sort {filters}">
+            <option value="err">Sort: worst for this CAT</option><option value="errasc">Sort: best for this CAT</option>
+            <option value="code" class="tk">{sortNum}</option><option value="shift">Sort: real shift A → B</option><option value="light" class="tk">Sort: {out} under B</option>
+          </select>
+        </div>
+        <div class="list" id="llist"></div>
+        <p class="hint tk">Columns: true colour under B, {numname}, error of the selected CAT, and the CAT that does best for that {filter}.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+</div>

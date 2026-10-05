@@ -1,0 +1,5 @@
+node_modules/
+__pycache__/
+*.pyc
+lee_output/
+.DS_Store

@@ -1,0 +1,98 @@
+<div id="view-map">
+<div class="grid">
+  <section class="stage">
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Diagram">
+        <button id="m-xy" aria-pressed="true">CIE 1931 xy</button>
+        <button id="m-uv" aria-pressed="false">CIE 1976 u′v′</button>
+      </div>
+      <div class="row">
+        <label class="chk"><input type="checkbox" id="c-planck" checked> Planckian locus</label>
+        <label class="chk"><input type="checkbox" id="c-labels"> <span class="tk">{labelsT}</span></label>
+      </div>
+    </div>
+    <div class="plot" id="plot">
+      <canvas id="cv" aria-label="Chromaticity diagram with filter positions" data-tk-al="Chromaticity diagram with {filter} positions"></canvas>
+      <div class="zoom"><button id="z-in" aria-label="Zoom in">+</button><button id="z-out" aria-label="Zoom out">−</button><button id="z-fit" aria-label="Reset view" title="Reset view">⤢</button></div>
+      <div class="tip" id="tip" hidden></div>
+    </div>
+    <div class="note tk">Scroll or pinch to zoom, drag to pan, click a point to select it. Dot colour is the colour of the light that {leaves}.{dotnote} Colour matching uses the official CIE 1931 2° standard observer tables.</div>
+    <div class="panel detail" id="detail"></div>
+  </section>
+
+  <aside class="side">
+    <section class="panel">
+      <h2 class="tk">1 · Your own {filters} (optional)</h2>
+      <label class="drop" id="drop" for="f-files">
+        <strong>Drop CSV files here</strong>
+        <small class="tk">Replaces the built-in set. Select all at once: <code>spectra_wide.csv</code>, <code>spectra_long.csv</code>, or every single-{filter} CSV from <code>spectra/</code>. <code>metadata.csv</code> adds {filter} names.</small>
+      </label>
+      <input type="file" id="f-files" accept=".csv,.tsv,.txt" multiple hidden>
+      <input type="file" id="f-dir" webkitdirectory multiple hidden>
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary" id="b-files">Choose files</button>
+        <button class="btn" id="b-dir">Choose folder</button>
+        <button class="btn" id="b-clear">Clear</button>
+        <button class="btn" id="b-lee">Restore built-in set</button>
+      </div>
+      <div class="field" style="margin-top:12px">
+        <label for="imp-mode">When I import</label>
+        <select id="imp-mode"><option value="replace">Replace the current set</option><option value="add">Add to the current set</option></select>
+      </div>
+      <div class="field">
+        <label for="imp-kind">Imported spectra are</label>
+        <select id="imp-kind"></select>
+      </div>
+      <details class="sub">
+        <summary>Keep only a subset</summary>
+        <textarea id="subset-text" rows="5" spellcheck="false" aria-label="List of names to keep" data-tk-ph="One {filter} per line: number, id or name"></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn primary" id="b-subset">Keep only these</button><button class="btn" id="b-subset-file">Load list from file</button><button class="btn" id="b-keepvis">Keep search results</button></div>
+        <input type="file" id="f-subset" accept=".txt,.csv" hidden>
+        <p class="note tk">Paste or load a list with one {filter} per line. Each line is matched against the id, the name or the catalogue number. Everything else is removed from this page (not from the built-in data). “Keep search results” keeps what the search box in section 3 currently shows.</p>
+      </details>
+      <div class="field" style="margin-top:12px">
+        <label for="s-edge">Outside the measured range</label>
+        <select id="s-edge"><option value="hold">Hold the end values</option><option value="zero">Treat as zero</option></select>
+      </div>
+      <div class="status" id="status" role="status"></div>
+    </section>
+
+    <section class="panel">
+      <h2>2 · Light source</h2>
+      <div class="srcrow" id="srcrow" role="group" aria-label="Light source">
+        <button class="btn" data-src="pcw">White LED</button>
+        <button class="btn" data-src="rgb">RGB LED</button>
+        <button class="btn" data-src="d65">D65</button>
+        <button class="btn" data-src="bb">Blackbody</button>
+        <button class="btn" data-src="ee">Equal energy</button>
+      </div>
+      <div class="field" id="bbbox" hidden>
+        <label for="r-cct"><span>Colour temperature</span><span><input type="number" id="n-cct" min="1000" max="25000" step="50" value="3200"> K</span></label>
+        <input type="range" id="r-cct" min="1000" max="12000" step="50" value="3200">
+        <div class="row"><button class="btn" data-cct="2700">2700</button><button class="btn" data-cct="3200">3200</button><button class="btn" data-cct="4300">4300</button><button class="btn" data-cct="5600">5600</button><button class="btn" data-cct="6500">6500</button></div>
+      </div>
+      <div class="field">
+        <div class="row"><button class="btn" id="b-led">Import your LED spectrum</button><span class="note" id="ledname"></span></div>
+        <input type="file" id="f-led" accept=".csv,.tsv,.txt" hidden>
+        <span class="note">Two columns: wavelength in nm, relative intensity. Any header row is ignored.</span>
+      </div>
+      <div class="readout" id="srcread"></div>
+    </section>
+
+    <section class="panel">
+      <h2>3 · <span class="tk">{Filters}</span> <span id="count" style="font-weight:400"></span></h2>
+      <div class="listhead">
+        <input type="search" id="q" placeholder="Search name or number" aria-label="Search filters" data-tk-ph="{search}" data-tk-al="Search {filters}">
+        <select id="s-sort" aria-label="Sort filters" data-tk-al="Sort {filters}">
+          <option value="code" class="tk">{sortNum}</option><option value="Y" class="tk">{sortY}</option>
+          <option value="shift">Colour shift</option><option value="cct">CCT</option><option value="duv">Duv</option>
+        </select>
+      </div>
+      <div class="list" id="list"></div>
+      <div class="row" style="margin-top:10px"><button class="btn" id="b-copy">Copy results as CSV</button></div>
+      <p class="note" id="attrib" style="margin:10px 0 0"></p>
+      <textarea id="csvout" hidden readonly aria-label="Results CSV"></textarea>
+    </section>
+  </aside>
+</div>
+</div>
