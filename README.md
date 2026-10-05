@@ -95,3 +95,4 @@ The **code** is under the MIT licence ([LICENSE](LICENSE)). The **built-in spect
 ## Contributing
 
 Issues and pull requests are welcome. Please run both test scripts first, and rebuild `dist/index.html`.
+# gel-chromaticity-map
