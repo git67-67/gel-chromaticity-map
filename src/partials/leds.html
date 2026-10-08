@@ -1,0 +1,73 @@
+<div id="view-leds" hidden>
+<div class="lab">
+  <p class="intro">Every light source in one place: the built-in CIE standard sources and your own LED spectra. Each point is one light. Colour the points by CRI or TM-30 to see which parts of the diagram hold good and poor colour rendering, then pick one to see its spectrum and its TM-30 colour vector graphic.</p>
+  <div class="grid">
+    <section class="stage">
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="Diagram">
+          <button id="ld-uv" aria-pressed="true">u′v′</button>
+          <button id="ld-xy" aria-pressed="false">xy</button>
+        </div>
+        <div class="toolrow">
+          <label class="chk">Colour points by <select id="ld-by" aria-label="Colour points by"></select></label>
+          <button class="btn sm" id="ld-frame">Frame the lights</button>
+          <label class="chk"><input type="checkbox" id="ld-planck" checked> Planckian locus</label>
+        </div>
+      </div>
+      <div class="plot" id="ld-plot">
+        <canvas id="ld-cv" aria-label="Chromaticity of every light in the library"></canvas>
+        <div class="zoom"><button id="ld-zin" aria-label="Zoom in">+</button><button id="ld-zout" aria-label="Zoom out">−</button><button id="ld-zfit" aria-label="Whole diagram" title="Whole diagram">⤢</button></div>
+        <div class="tip" id="ld-tip" hidden></div>
+      </div>
+      <div class="legendbar" id="ld-legend"></div>
+      <div class="note">Scroll or pinch to zoom, drag to pan, click a point to select it. Only lights that pass the filters on the right are drawn. Lights with no CCT (far from the Planckian locus) are drawn but have no CRI or TM-30 value and appear grey.</div>
+      <div class="panel detail" id="ld-detail"></div>
+    </section>
+    <aside class="side">
+      <section class="panel">
+        <h2>Add LED spectra</h2>
+        <label class="drop" id="ld-drop" for="ld-files">
+          <strong>Drop LED files here</strong>
+          <small>Any number of CSV files, one spectrum each (wavelength, intensity; “# key,value” header lines are read as the instrument’s own numbers), or one file with many spectra (long or wide). A table with a <code>rid</code> or <code>id</code> column adds names and reported values.</small>
+        </label>
+        <input type="file" id="ld-files" accept=".csv,.tsv,.txt" multiple hidden>
+        <input type="file" id="ld-dir" webkitdirectory multiple hidden>
+        <div class="row" style="margin-top:10px">
+          <button class="btn primary" id="ld-bfiles">Choose files</button>
+          <button class="btn" id="ld-bdir">Choose folder</button>
+        </div>
+        <div class="status" id="ld-status" role="status"></div>
+        <p class="note" id="ld-persist"></p>
+      </section>
+      <section class="panel">
+        <h2>Lights <span id="ld-count" style="font-weight:400"></span></h2>
+        <div class="listhead">
+          <input type="search" id="ld-q" placeholder="Search name, model, tag" aria-label="Search lights">
+          <select id="ld-sort" aria-label="Sort lights">
+            <option value="name">Sort: name</option><option value="cct">Sort: CCT</option><option value="duv">Sort: |Duv|</option>
+            <option value="Ra">Sort: CRI Ra</option><option value="R9">Sort: R9</option><option value="Rf">Sort: TM-30 Rf</option><option value="Rg">Sort: TM-30 Rg</option>
+          </select>
+        </div>
+        <details class="sub" id="ld-filters">
+          <summary>Filter by CCT, Duv and rendering</summary>
+          <div class="fgrid">
+            <label>CCT from <input type="number" id="ld-f-c0" placeholder="1000" step="100"></label>
+            <label>to <input type="number" id="ld-f-c1" placeholder="25000" step="100"></label>
+            <label>|Duv| ≤ <input type="number" id="ld-f-duv" placeholder="any" step="0.001" min="0"></label>
+            <label>Ra ≥ <input type="number" id="ld-f-ra" placeholder="any" step="1"></label>
+            <label>Rf ≥ <input type="number" id="ld-f-rf" placeholder="any" step="1"></label>
+            <label>R9 ≥ <input type="number" id="ld-f-r9" placeholder="any" step="1"></label>
+          </div>
+          <div class="row" style="margin-top:8px"><label class="chk"><input type="checkbox" id="ld-f-std" checked> CIE standard sources</label><label class="chk"><input type="checkbox" id="ld-f-usr" checked> Imported</label><button class="btn sm" id="ld-f-clear">Clear filters</button></div>
+        </details>
+        <div class="vlist" id="ld-list" role="listbox" aria-label="Lights"><div class="vin" id="ld-vin"></div></div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn" id="ld-csv">Copy table as CSV</button>
+          <button class="btn" id="ld-clear">Remove imported</button>
+        </div>
+        <textarea id="ld-csvout" hidden readonly aria-label="Library table as CSV"></textarea>
+      </section>
+    </aside>
+  </div>
+</div>
+</div>

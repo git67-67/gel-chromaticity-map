@@ -1,0 +1,6 @@
+# one entry per line: number, id or name; text after # is ignored
+119
+201
+247
+Cobalt blue
+Ultramarine blue (artificial)

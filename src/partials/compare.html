@@ -1,0 +1,70 @@
+<div id="view-cmp" hidden>
+<div class="lab">
+  <p class="intro tk">Pick light A and light B, ideally with the same CCT and Duv but different colour rendering. Every {filter} is worked out from its real spectrum under both lights. The chart shows how far each one moves when you swap A for B. The two colour vector graphics show, hue by hue, what each light does to saturation and hue.</p>
+  <div class="ctl3">
+    <section class="panel">
+      <h2>Light A (from)</h2>
+      <div id="cm-pickA"></div>
+      <div class="readout" id="cm-readA"></div>
+    </section>
+    <section class="panel">
+      <div class="ph"><h2>Light B (to)</h2><button class="btn sm" id="cm-swap" title="Swap A and B">⇄ Swap</button></div>
+      <div id="cm-pickB"></div>
+      <div class="row" style="margin-top:8px"><button class="btn sm" id="cm-ref">Use the ideal reference light for A</button></div>
+      <div class="readout" id="cm-readB"></div>
+    </section>
+    <section class="panel">
+      <h2>Find a partner for A</h2>
+      <div class="fgrid inl">
+        <label>CCT within ± K <input type="number" id="cm-tc" value="150" step="50" min="0"></label>
+        <label>|ΔDuv| ≤ <input type="number" id="cm-td" value="0.003" step="0.001" min="0"></label>
+        <label>Sort by <select id="cm-ts"><option value="rf">Rf, lowest first</option><option value="rfd">Rf, highest first</option><option value="ra">Ra, lowest first</option><option value="rg">Rg, highest first</option><option value="rgl">Rg, lowest first</option><option value="dd">Closest chromaticity</option></select></label>
+      </div>
+      <div id="cm-cands" style="max-height:260px;overflow:auto;margin-top:8px"></div>
+    </section>
+  </div>
+  <div class="big" id="cm-sum"></div>
+  <div class="grid">
+    <section class="stage">
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="Diagram">
+          <button id="cm-uv" aria-pressed="true">u′v′</button>
+          <button id="cm-xy" aria-pressed="false">xy</button>
+        </div>
+        <div class="toolrow">
+          <label class="magctl" for="cm-mag">Shift magnification <input type="range" id="cm-mag" min="1" max="40" step="1" value="1"><b id="cm-magv">×1</b></label>
+          <label class="chk"><input type="checkbox" id="cm-nowhite"> Remove the white-point difference</label>
+        </div>
+        <div class="toolrow">
+          <button class="btn sm" id="cm-frame">Frame the colours</button><button class="btn sm" id="cm-whole">Whole diagram</button>
+          <label class="chk"><input type="checkbox" id="cm-planck" checked> Planckian locus</label>
+        </div>
+      </div>
+      <div class="plot" id="cm-plot">
+        <canvas id="cm-cv" aria-label="Where each colour sits under light A and light B"></canvas>
+        <div class="zoom"><button id="cm-zin" aria-label="Zoom in">+</button><button id="cm-zout" aria-label="Zoom out">−</button><button id="cm-zfit" aria-label="Whole diagram" title="Whole diagram">⤢</button></div>
+        <div class="tip" id="cm-tip" hidden></div>
+      </div>
+      <div class="note tk" id="cm-note"></div>
+      <div class="two">
+        <div class="panel"><h2>TM-30 colour vector graphics</h2><canvas id="cm-cvg" class="cvg"></canvas><div class="legend" id="cm-cvgleg"></div>
+          <p class="hint">Dots show where each light puts the 16 hue bins relative to its own reference light (the circle). A light that matches the reference sits on the circle. Light A and light B are drawn on top of each other so the differences stand out.</p></div>
+        <div class="panel"><h2>Spectra and rendering numbers</h2><canvas id="cm-sp" class="sp"></canvas><div class="legend" id="cm-spleg"></div><div id="cm-tab"></div></div>
+      </div>
+      <div class="panel"><h2 class="tk">Biggest changes between A and B</h2><div class="pairs" id="cm-pairs"></div>
+        <p class="hint tk">Each tile shows the colour of the light that {leaves} under A (left) and B (right). Colours are drawn at equal brightness from the chromaticity only, so they show the hue and saturation change, not brightness.</p></div>
+    </section>
+    <aside class="side">
+      <section class="panel" id="cm-detail"></section>
+      <section class="panel">
+        <h2><span class="tk">{Filters}</span> <span id="cm-count" style="font-weight:400"></span></h2>
+        <div class="listhead">
+          <input type="search" id="cm-q" placeholder="Search name or number" aria-label="Search" data-tk-ph="{search}">
+          <select id="cm-sort" aria-label="Sort"><option value="shift">Sort: largest shift</option><option value="small">Sort: smallest shift</option><option value="code" class="tk">{sortNum}</option></select>
+        </div>
+        <div class="list" id="cm-list"></div>
+      </section>
+    </aside>
+  </div>
+</div>
+</div>

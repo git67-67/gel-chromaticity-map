@@ -1,0 +1,20 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: python3 tools/build.py --check
+      - run: python3 tools/build.py
+      - name: dist is up to date
+        run: test -z "$(git status --porcelain dist)" || (git status --porcelain dist; echo 'dist/ is out of date: run python3 tools/build.py and commit'; exit 1)
+      - run: node tests/maths.mjs
+      - run: pip install playwright && playwright install --with-deps chromium
+      - run: python3 tests/smoke.py
+      - run: python3 tests/leds.py 150
+      - run: python3 tests/pwa.py
