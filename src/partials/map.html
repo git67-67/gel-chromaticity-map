@@ -33,7 +33,7 @@
         <button class="btn primary" id="b-files">Choose files</button>
         <button class="btn" id="b-dir">Choose folder</button>
         <button class="btn" id="b-clear">Clear</button>
-        <button class="btn" id="b-lee">Restore built-in set</button>
+        <button class="btn" id="b-lee" title="Deletes your saved spectra for this data set and shows the built-in ones again">Delete saved &amp; restore built-in</button>
       </div>
       <div class="field" style="margin-top:12px">
         <label for="imp-mode">When I import</label>
@@ -55,6 +55,13 @@
         <select id="s-edge"><option value="hold">Hold the end values</option><option value="zero">Treat as zero</option></select>
       </div>
       <div class="status" id="status" role="status"></div>
+      <div class="bk-box" style="margin-top:12px">
+        <p class="note" id="us-note"></p>
+        <div class="row"><button class="btn sm" data-bk="download">Download backup</button><button class="btn sm" data-bk="copy">Copy backup text</button><button class="btn sm" data-bk="load">Load backup</button></div>
+        <div class="status bk-msg" role="status"></div>
+        <textarea class="bk-out" hidden readonly aria-label="Backup text"></textarea>
+      </div>
+      <input type="file" id="bk-file" accept=".json,application/json" hidden>
     </section>
 
     <section class="panel">

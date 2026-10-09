@@ -27,21 +27,26 @@ function applyTerms(){
   const k=$('imp-kind');if(k)k.value=st.kind;}
 
 /* header switch + the "imported spectra are" selector, built from the registry */
-function hasBuiltin(d){return d.entries().length>0;}   // import-only sets (LEE, Munsell) have no built-in spectra and stay out of the header switch
+const _hb={};
+function hasBuiltin(d){return _hb[d.id]??(_hb[d.id]=d.entries().length>0);}
+const hasSet=d=>hasBuiltin(d)||userSets.has(d.id);   // shown in the header switch   // import-only sets (LEE, Munsell) have no built-in spectra and stay out of the header switch
 function renderDatasetSwitch(){
-  $('dsseg').innerHTML=[...DATASETS.values()].filter(hasBuiltin).map(d=>`<button data-ds="${esc(d.id)}" aria-pressed="false">${esc(d.label)}</button>`).join('');
+  $('dsseg').innerHTML=[...DATASETS.values()].filter(hasSet).map(d=>`<button data-ds="${esc(d.id)}" aria-pressed="false">${esc(d.label)}</button>`).join('');
   $('dsseg').onclick=e=>{const b=e.target.closest('button[data-ds]');if(b)setKind(b.dataset.ds);};
   const k=$('imp-kind');
   if(k){k.innerHTML=[...DATASETS.values()].map(d=>`<option value="${esc(d.id)}">${esc(d.vocab.Filters)} (${esc(d.measure)})</option>`).join('');
     k.onchange=()=>{st.kind=k.value;applyTerms();renderAll();};}}
 
-function loadBuiltin(kind){
-  kind=kind||st.kind;if(!DATASETS.has(kind)||!hasBuiltin(DATASETS.get(kind)))kind=DEFAULT_KIND;   // nothing built in for this kind: fall back
+function loadBuiltin(kind,forceBuiltin){
+  kind=kind||st.kind;if(!DATASETS.has(kind)||!hasSet(DATASETS.get(kind)))kind=DEFAULT_KIND;   // nothing for this kind: fall back
   const d=DATASETS.get(kind);st.kind=kind;
   st.filters.clear();st.names.clear();
-  for(const e of d.entries()){st.names.set(e.id,e.name);addFilter({...e,demo:true});}
-  st.demo=true;st.sel=d.vocab.sel;st.q='';const qe=$('q');if(qe)qe.value='';
-  applyTerms();
+  const saved=!forceBuiltin&&userSets.get(kind);      // your saved spectra win over the built-in ones
+  const src=saved||(hasBuiltin(d)?d.entries():[]);
+  for(const e of src){st.names.set(e.id,e.name);addFilter(saved?e:{...e,demo:true});}
+  st.demo=!saved;st.sel=saved?firstId():d.vocab.sel;st.q='';const qe=$('q');if(qe)qe.value='';
+  applyTerms();usRefresh();
   if(typeof labDatasetChanged==='function')labDatasetChanged();
-  setStatus(`${st.filters.size} ${d.noun} are built in. Import your own CSVs to replace them.`);}
+  setStatus(saved?`Showing your ${st.filters.size} saved ${d.noun}.`:`${st.filters.size} ${d.noun} are built in. Import your own CSVs to replace them.`);
+  try{US.last=kind;if(US.persist&&US.ready)kvPut('last',kind);}catch(e){}}
 function setKind(k){loadBuiltin(k);if(typeof fitView==='function')fitView();recompute();}

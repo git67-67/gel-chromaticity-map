@@ -1,6 +1,6 @@
 /* Service worker: lets the page open offline after the first visit.
-   c72ae694e8 is replaced by tools/build.py with a hash of the page, so a new build refreshes the cache. */
-const CACHE = 'gel-map-c72ae694e8';
+   69847e008b is replaced by tools/build.py with a hash of the page, so a new build refreshes the cache. */
+const CACHE = 'gel-map-69847e008b';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {

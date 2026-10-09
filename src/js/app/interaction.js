@@ -57,8 +57,8 @@ function ledResultText(r){return (r.added+r.updated?'Added '+r.added+(r.updated?
 $('b-files').onclick=()=>$('f-files').click();$('b-dir').onclick=()=>$('f-dir').click();
 $('f-files').onchange=e=>{importFiles(e.target.files);e.target.value='';};
 $('f-dir').onchange=e=>{importFiles(e.target.files);e.target.value='';};
-$('b-clear').onclick=()=>{st.filters.clear();st.names.clear();st.demo=false;st.sel=null;setStatus(tk('All {filters} removed.'));recompute();};
-$('b-lee').onclick=()=>{loadBuiltin(st.kind);recompute();};
+$('b-clear').onclick=()=>{st.filters.clear();st.names.clear();st.demo=false;st.sel=null;usDelete(st.kind);setStatus(tk('All {filters} removed, and the saved copy deleted.'));recompute();};
+$('b-lee').onclick=async()=>{const k=st.kind;await usDelete(k);loadBuiltin(k,true);if(typeof fitView==='function')fitView();recompute();};
 
 const drop=$('drop');
 ['dragenter','dragover'].forEach(t=>document.addEventListener(t,e=>{e.preventDefault();drop.classList.add('over');}));

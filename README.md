@@ -2,7 +2,7 @@
 
 An interactive, single-file web tool that shows where **lighting filters (gels)** and **artist pigments** land on the CIE chromaticity diagram under a light source you choose, and lets you compare **chromatic adaptation transforms (CATs)** against the spectrally exact answer.
 
-It is one HTML file with no server and no dependencies. Built in: 97 synthetic example colour gels, 82 artist pigments, and three open reflectance sets (the 14 CRI test colour samples, the 99 TM-30 colour evaluation samples and the 24 ColorChecker patches). Real filter catalogues such as LEE, and sets such as Munsell, are not bundled: load your own files (see `docs/DATA_FORMATS.md`).
+It is one HTML file with no server and no dependencies. Built in: 97 synthetic example colour gels, 82 artist pigments, and three open reflectance sets (the 14 CRI test colour samples, the 99 TM-30 colour evaluation samples and the 24 ColorChecker patches). Real filter catalogues such as LEE, and sets such as Munsell, are not bundled: load your own files (see `docs/IMPORTING.md`). Imported data is saved in your browser, so you only load it once.
 
 ![Colour map with the example gels](docs/img/map-gels.png)
 
@@ -56,7 +56,7 @@ wavelength_nm,transmission
 ...
 ```
 
-You can also load many at once (wide table, or long table with a `filter_id` column), add names with a metadata file, replace or add to the current set, and keep only a subset. Full details, with example files in [`examples/`](examples/): **[docs/DATA_FORMATS.md](docs/DATA_FORMATS.md)** and **[docs/USER_GUIDE.md](docs/USER_GUIDE.md)**.
+You can also load many at once (wide table, or long table with a `filter_id` column), add names with a metadata file, replace or add to the current set, and keep only a subset. Full details, with example files in [`examples/`](examples/): **[docs/IMPORTING.md](docs/IMPORTING.md)** (start here), [docs/DATA_FORMATS.md](docs/DATA_FORMATS.md)** and **[docs/USER_GUIDE.md](docs/USER_GUIDE.md)**.
 
 ## Project layout
 
@@ -87,6 +87,7 @@ dist/                   the built page (index.html) plus manifest, icons and ser
 | | |
 |---|---|
 | [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | How to use all four tabs (map, lab, LED library, LED compare), what the numbers mean, limits |
+| [docs/IMPORTING.md](docs/IMPORTING.md) | **How to add your own filters, pigments and LEDs**: file layouts, templates, saving, backup |
 | [docs/DATA_FORMATS.md](docs/DATA_FORMATS.md) | CSV formats the page accepts, subset lists, building `data/*.json` |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | How the code fits together; add a data set, a metric (CRI, TM-30), a CAT |
 | [docs/MATHS.md](docs/MATHS.md) | The calculations and their assumptions |

@@ -1,5 +1,7 @@
 # User guide
 
+Anything you import is saved in your browser and loaded automatically next time; see [IMPORTING.md](IMPORTING.md) for file layouts, saving and the backup file.
+
 The page has two tabs, **Colour map** and **Adaptation lab**, and a switch in the top right for the data set: **Colour gels** (synthetic examples), **Artist pigments**, **CRI samples**, **TM-30 samples** or **ColorChecker**. LEE filters and Munsell chips are not built in: import your files and choose them under *Imported spectra are*. The switch applies to both tabs.
 
 ## Colour map

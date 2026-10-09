@@ -275,7 +275,7 @@ html[data-nocode] .item .nm{color:var(--fg)}
         <button class="btn primary" id="b-files">Choose files</button>
         <button class="btn" id="b-dir">Choose folder</button>
         <button class="btn" id="b-clear">Clear</button>
-        <button class="btn" id="b-lee">Restore built-in set</button>
+        <button class="btn" id="b-lee" title="Deletes your saved spectra for this data set and shows the built-in ones again">Delete saved &amp; restore built-in</button>
       </div>
       <div class="field" style="margin-top:12px">
         <label for="imp-mode">When I import</label>
@@ -297,6 +297,13 @@ html[data-nocode] .item .nm{color:var(--fg)}
         <select id="s-edge"><option value="hold">Hold the end values</option><option value="zero">Treat as zero</option></select>
       </div>
       <div class="status" id="status" role="status"></div>
+      <div class="bk-box" style="margin-top:12px">
+        <p class="note" id="us-note"></p>
+        <div class="row"><button class="btn sm" data-bk="download">Download backup</button><button class="btn sm" data-bk="copy">Copy backup text</button><button class="btn sm" data-bk="load">Load backup</button></div>
+        <div class="status bk-msg" role="status"></div>
+        <textarea class="bk-out" hidden readonly aria-label="Backup text"></textarea>
+      </div>
+      <input type="file" id="bk-file" accept=".json,application/json" hidden>
     </section>
 
     <section class="panel">
@@ -481,6 +488,11 @@ html[data-nocode] .item .nm{color:var(--fg)}
         </div>
         <div class="status" id="ld-status" role="status"></div>
         <p class="note" id="ld-persist"></p>
+        <div class="bk-box">
+          <div class="row"><button class="btn sm" data-bk="download">Download backup</button><button class="btn sm" data-bk="copy">Copy backup text</button><button class="btn sm" data-bk="load">Load backup</button></div>
+          <div class="status bk-msg" role="status"></div>
+          <textarea class="bk-out" hidden readonly aria-label="Backup text"></textarea>
+        </div>
       </section>
       <section class="panel">
         <h2>Lights <span id="ld-count" style="font-weight:400"></span></h2>
@@ -1038,23 +1050,28 @@ function applyTerms(){
   const k=$('imp-kind');if(k)k.value=st.kind;}
 
 /* header switch + the "imported spectra are" selector, built from the registry */
-function hasBuiltin(d){return d.entries().length>0;}   // import-only sets (LEE, Munsell) have no built-in spectra and stay out of the header switch
+const _hb={};
+function hasBuiltin(d){return _hb[d.id]??(_hb[d.id]=d.entries().length>0);}
+const hasSet=d=>hasBuiltin(d)||userSets.has(d.id);   // shown in the header switch   // import-only sets (LEE, Munsell) have no built-in spectra and stay out of the header switch
 function renderDatasetSwitch(){
-  $('dsseg').innerHTML=[...DATASETS.values()].filter(hasBuiltin).map(d=>`<button data-ds="${esc(d.id)}" aria-pressed="false">${esc(d.label)}</button>`).join('');
+  $('dsseg').innerHTML=[...DATASETS.values()].filter(hasSet).map(d=>`<button data-ds="${esc(d.id)}" aria-pressed="false">${esc(d.label)}</button>`).join('');
   $('dsseg').onclick=e=>{const b=e.target.closest('button[data-ds]');if(b)setKind(b.dataset.ds);};
   const k=$('imp-kind');
   if(k){k.innerHTML=[...DATASETS.values()].map(d=>`<option value="${esc(d.id)}">${esc(d.vocab.Filters)} (${esc(d.measure)})</option>`).join('');
     k.onchange=()=>{st.kind=k.value;applyTerms();renderAll();};}}
 
-function loadBuiltin(kind){
-  kind=kind||st.kind;if(!DATASETS.has(kind)||!hasBuiltin(DATASETS.get(kind)))kind=DEFAULT_KIND;   // nothing built in for this kind: fall back
+function loadBuiltin(kind,forceBuiltin){
+  kind=kind||st.kind;if(!DATASETS.has(kind)||!hasSet(DATASETS.get(kind)))kind=DEFAULT_KIND;   // nothing for this kind: fall back
   const d=DATASETS.get(kind);st.kind=kind;
   st.filters.clear();st.names.clear();
-  for(const e of d.entries()){st.names.set(e.id,e.name);addFilter({...e,demo:true});}
-  st.demo=true;st.sel=d.vocab.sel;st.q='';const qe=$('q');if(qe)qe.value='';
-  applyTerms();
+  const saved=!forceBuiltin&&userSets.get(kind);      // your saved spectra win over the built-in ones
+  const src=saved||(hasBuiltin(d)?d.entries():[]);
+  for(const e of src){st.names.set(e.id,e.name);addFilter(saved?e:{...e,demo:true});}
+  st.demo=!saved;st.sel=saved?firstId():d.vocab.sel;st.q='';const qe=$('q');if(qe)qe.value='';
+  applyTerms();usRefresh();
   if(typeof labDatasetChanged==='function')labDatasetChanged();
-  setStatus(`${st.filters.size} ${d.noun} are built in. Import your own CSVs to replace them.`);}
+  setStatus(saved?`Showing your ${st.filters.size} saved ${d.noun}.`:`${st.filters.size} ${d.noun} are built in. Import your own CSVs to replace them.`);
+  try{US.last=kind;if(US.persist&&US.ready)kvPut('last',kind);}catch(e){}}
 function setKind(k){loadBuiltin(k);if(typeof fitView==='function')fitView();recompute();}
 
 /* ---- data: data/gels.json ---- */
@@ -1187,10 +1204,86 @@ async function importFiles(fileList){
   for(const m of metas)for(const [id,name] of m){st.names.set(id,name);const f=st.filters.get(id);if(f){f.name=name;f.code=codeOf(name);f.lab=f.code||name.slice(0,16);}}
   setStatus(`Imported ${nf} ${tk(nf===1?'{filter}':'{filters}')} from ${files.length} file${files.length===1?'':'s'}`+(bad?` · ${bad} skipped (unrecognised format)`:'')+(mode==='add'?` · set now has ${st.filters.size}`:'')+'.',nf?'ok':'err');
   if(!st.sel||!st.filters.has(st.sel))st.sel=firstId();
+  if(nf)usSaveSoon();
   recompute();}
 function setStatus(t,c){const s=$('status');s.textContent=t;s.className='status '+(c||'');}
 /* first entry by number/name; independent of the sort menu because spectra may not be calculated yet */
 function firstId(){return [...st.filters.values()].sort(natCmp)[0]?.id||null;}
+
+/* ---- app/store.js ---- */
+/* Saved data: keeps what you import so it is still there next time.
+   - spectra sets (filters, pigments, LEE, Munsell, ...): one set per data set, in IndexedDB database 'gelmap-sets'
+   - LED library: see led/library.js (database 'gel-map')
+   - backup file: both together as one JSON file, so you can move them to another browser or recover after clearing site data
+   Where the browser blocks storage (private windows, some sandboxes) everything still works for the session; the page says so
+   and the backup file is the way to keep your data. */
+const userSets=new Map();   // data set id -> [{id,name,code,wl:[nm],v:[fraction]}]
+const US={persist:false,ready:false,last:null};
+function kvOpen(){return new Promise((res,rej)=>{try{const r=indexedDB.open('gelmap-sets',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}catch(e){rej(e);}});}
+function kvDo(fn){return kvOpen().then(db=>new Promise((res,rej)=>{const tx=db.transaction('kv','readwrite');let r;try{r=fn(tx.objectStore('kv'));}catch(e){rej(e);return;}tx.oncomplete=()=>res(r&&r.result);tx.onerror=()=>rej(tx.error);}));}
+const kvPut=(k,v)=>kvDo(os=>{os.put(v,k);});
+const kvDel=k=>kvDo(os=>{os.delete(k);});
+async function usLoad(){
+  try{const db=await kvOpen();US.persist=true;
+    const get=(os,m)=>new Promise((a,b)=>{const r=os[m]();r.onsuccess=()=>a(r.result);r.onerror=()=>b(r.error);});
+    const os=db.transaction('kv').objectStore('kv'),keys=await get(os,'getAllKeys'),vals=await get(os,'getAll');
+    keys.forEach((k,i)=>{if(String(k).startsWith('set:')&&Array.isArray(vals[i])&&vals[i].length)userSets.set(String(k).slice(4),vals[i]);else if(k==='last')US.last=vals[i];});
+    try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}   // ask the browser not to evict it
+  }catch(e){US.persist=false;}
+  US.ready=true;return userSets.size;}
+/* what is on screen for the current data set, as plain data */
+function usSnapshot(){return [...st.filters.values()].map(f=>({id:f.id,name:f.name,code:f.code,wl:f.wl,v:f.v}));}
+let usT=0;
+function usSaveSoon(){clearTimeout(usT);usT=setTimeout(usSave,300);}
+async function usSave(){
+  const kind=st.kind,items=usSnapshot();
+  if(items.length)userSets.set(kind,items);else userSets.delete(kind);
+  usRefresh();
+  if(!US.persist)return;
+  try{if(items.length)await kvPut('set:'+kind,items);else await kvDel('set:'+kind);}catch(e){US.persist=false;usRefresh();}}
+async function usDelete(kind){userSets.delete(kind);if(US.persist){try{await kvDel('set:'+kind);}catch(e){}}usRefresh();}
+/* header switch + the "saved" note follow whatever is saved */
+function usRefresh(){
+  if(typeof renderDatasetSwitch==='function'){renderDatasetSwitch();document.querySelectorAll('#dsseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ds===st.kind));}
+  const note=$('us-note');if(!note)return;
+  const parts=[...userSets].map(([k,v])=>`${v.length} ${DATASETS.has(k)?DATASETS.get(k).vocab.Filters.toLowerCase():k}`).join(', ');
+  note.textContent=US.persist
+    ?(parts?`Saved in this browser (${parts}). They load automatically next time.`:'Anything you import is saved in this browser automatically, so you do not have to import it again.')
+    :'This page cannot store data here, so imports last only until you close it. Use “Download backup” to keep them'+(parts?` (now held: ${parts}).`:'.');
+  const p=$('ld-persist');if(p&&typeof LED!=='undefined')p.textContent=LED.persist?'Imported lights are saved in this browser and load automatically next time. “Remove imported” deletes them.':'This page cannot store data here, so imported lights last only until you close it. Use “Download backup” to keep them.';}
+
+/* ---- backup file ---- */
+const BK_FORMAT='gel-chromaticity-map-library';
+function backupBuild(){
+  const sets={};for(const [k,v] of userSets)sets[k]=v.map(e=>({id:e.id,name:e.name,code:e.code,wl:e.wl,v:e.v.map(x=>+x.toFixed(6))}));
+  const leds=ledUser().map(it=>({id:it.id,name:it.name,wl:Array.from(it.wl),v:Array.from(it.v,x=>+x.toFixed(5)),meta:it.meta,notes:it.notes}));
+  return JSON.stringify({format:BK_FORMAT,version:1,saved:new Date().toISOString(),sets,leds});}
+async function backupRestore(text){
+  let o;try{o=JSON.parse(text);}catch(e){throw new Error('That file is not a backup (not valid JSON).');}
+  if(!o||o.format!==BK_FORMAT)throw new Error('That file is not a backup made by this page.');
+  let ns=0,nl=0;
+  let first=null;
+  for(const [k,items] of Object.entries(o.sets||{})){if(!Array.isArray(items)||!items.length)continue;
+    userSets.set(k,items.map(e=>({id:String(e.id),name:String(e.name||''),code:e.code||'',wl:e.wl.map(Number),v:e.v.map(Number)})));ns+=items.length;if(!first||k===st.kind)first=k;
+    if(US.persist)try{await kvPut('set:'+k,userSets.get(k));}catch(e){US.persist=false;}}
+  for(const r of (o.leds||[])){try{ledPut(ledMake(String(r.id),r.name,'Imported','usr',r.wl.map(Number),r.v.map(Number),r.meta,r.notes));nl++;}catch(e){}}
+  if(nl){ledChanged();ledSaveSoon();}
+  usRefresh();
+  if(first){loadBuiltin(first);if(typeof fitView==='function')fitView();recompute();}
+  return {ns,nl};}
+async function copyText(text,ta){ta.value=text;ta.hidden=false;ta.select();try{await navigator.clipboard.writeText(text);return true;}catch(e){try{return document.execCommand('copy');}catch(e2){return false;}}}
+function saveTextFile(name,text){try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);return true;}catch(e){return false;}}
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-bk]');if(!b)return;
+  const box=b.closest('.bk-box'),msg=box.querySelector('.bk-msg'),ta=box.querySelector('.bk-out'),say=(t,c)=>{msg.textContent=t;msg.className='status bk-msg '+(c||'');};
+  const act=b.dataset.bk;
+  if(act==='load'){document.getElementById('bk-file').onchange=async ev=>{const f=ev.target.files[0];ev.target.value='';if(!f)return;
+      try{const r=await backupRestore(await f.text());say(`Restored ${r.ns} spectra and ${r.nl} lights from ${f.name}.`,'ok');}catch(err){say(err.message,'err');}};
+    document.getElementById('bk-file').click();return;}
+  const text=backupBuild(),n=userSets.size+ledUser().length;
+  if(!n){say('Nothing imported yet, so there is nothing to back up.','err');return;}
+  if(act==='download'){const ok=saveTextFile('gel-map-backup.json',text);say(ok?'Backup file created. If your browser did not offer a download, use “Copy backup text” instead.':'Could not create a file; use “Copy backup text”.',ok?'ok':'err');}
+  else{const ok=await copyText(text,ta);say(ok?'Backup text copied. Paste it into a text file and save it as gel-map-backup.json.':'Select the text below, copy it, and save it as gel-map-backup.json.',ok?'ok':'');}});
 
 /* ---- app/subset.js ---- */
 /* Keep only a subset of the loaded spectra.
@@ -1203,6 +1296,7 @@ function keepOnly(pred,what){
   st.demo=false;
   if(!st.sel||!st.filters.has(st.sel))st.sel=firstId();
   setStatus(`Kept ${st.filters.size} of ${before} ${tk('{filters}')} (${what}).`,st.filters.size?'ok':'err');
+  if(st.filters.size)usSaveSoon();
   recompute();}
 function keepList(lines){
   const want=lines.map(normKey).filter(Boolean),hit=new Set();
@@ -1428,8 +1522,8 @@ function ledResultText(r){return (r.added+r.updated?'Added '+r.added+(r.updated?
 $('b-files').onclick=()=>$('f-files').click();$('b-dir').onclick=()=>$('f-dir').click();
 $('f-files').onchange=e=>{importFiles(e.target.files);e.target.value='';};
 $('f-dir').onchange=e=>{importFiles(e.target.files);e.target.value='';};
-$('b-clear').onclick=()=>{st.filters.clear();st.names.clear();st.demo=false;st.sel=null;setStatus(tk('All {filters} removed.'));recompute();};
-$('b-lee').onclick=()=>{loadBuiltin(st.kind);recompute();};
+$('b-clear').onclick=()=>{st.filters.clear();st.names.clear();st.demo=false;st.sel=null;usDelete(st.kind);setStatus(tk('All {filters} removed, and the saved copy deleted.'));recompute();};
+$('b-lee').onclick=async()=>{const k=st.kind;await usDelete(k);loadBuiltin(k,true);if(typeof fitView==='function')fitView();recompute();};
 
 const drop=$('drop');
 ['dragenter','dragover'].forEach(t=>document.addEventListener(t,e=>{e.preventDefault();drop.classList.add('over');}));
@@ -2168,6 +2262,9 @@ renderDatasetSwitch();renderMetricSort();
 ledLoadStandard();
 ledLoadSaved().then(n=>{if(n&&st.src==='lib')recompute();});
 loadBuiltin(DEFAULT_KIND);   // start with the built-in example gels so the page is useful before any import
+usLoad().then(n=>{   // saved spectra sets: switch to the last data set you used, if it holds your saved spectra
+  usRefresh();const k=(US.last&&userSets.has(US.last))?US.last:(userSets.has(st.kind)?st.kind:null);
+  if(k){loadBuiltin(k);if(typeof fitView==='function')fitView();recompute();}});
 sizeCanvas();recompute();
 fillSrc();
 if(!st.sel||!st.filters.has(st.sel))st.sel=firstId();

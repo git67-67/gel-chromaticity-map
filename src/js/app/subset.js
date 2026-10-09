@@ -8,6 +8,7 @@ function keepOnly(pred,what){
   st.demo=false;
   if(!st.sel||!st.filters.has(st.sel))st.sel=firstId();
   setStatus(`Kept ${st.filters.size} of ${before} ${tk('{filters}')} (${what}).`,st.filters.size?'ok':'err');
+  if(st.filters.size)usSaveSoon();
   recompute();}
 function keepList(lines){
   const want=lines.map(normKey).filter(Boolean),hit=new Set();

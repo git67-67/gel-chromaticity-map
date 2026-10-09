@@ -1,5 +1,7 @@
 # Data formats
 
+Task-oriented guide with templates: [IMPORTING.md](IMPORTING.md). This file is the reference.
+
 ## Importing in the page
 
 Drop files on the page, or use *Choose files* / *Choose folder*. Accepted: `.csv`, `.tsv`, `.txt`. The delimiter is detected: comma, semicolon (a comma is then read as the decimal mark), tab or spaces. Values larger than 1.5 are read as percent, otherwise as fractions. Wavelengths are in nm and may be uneven; the page interpolates onto a 1 nm grid from 380 to 780 nm.

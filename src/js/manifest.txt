@@ -39,6 +39,7 @@ app/datasets/pigments.js
 data CC_DATA data/colorchecker.json
 app/datasets/reflectance-sets.js
 app/import.js
+app/store.js
 app/subset.js
 app/calc.js
 app/list.js

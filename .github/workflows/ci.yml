@@ -18,3 +18,5 @@ jobs:
       - run: python3 tests/smoke.py
       - run: python3 tests/leds.py 150
       - run: python3 tests/pwa.py
+      - run: python3 tests/persist.py
+      - run: python3 tests/templates.py

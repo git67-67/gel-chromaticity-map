@@ -63,7 +63,8 @@ with sync_playwright() as p:
         pg.select_option("#imp-kind", "pig"); pg.wait_for_timeout(200)
         check(tag + "kind selector changes wording without reloading data", "(5)" in count() and "PIGMENTS" in pg.inner_text("h2:has(#count)").upper())
         # subset keep list on the built-in set
-        pg.select_option("#imp-mode", "replace"); pg.click("[data-ds=gel]"); pg.wait_for_timeout(200)
+        pg.select_option("#imp-mode", "replace"); pg.select_option("#imp-kind", "gel"); pg.click("#b-lee"); pg.wait_for_timeout(300)   # delete the saved import, back to the built-in gels
+        check(tag + "delete saved restores built-in gels", "97" in count(), count())
         pg.evaluate("document.querySelector('details.sub').open=true")
         pg.fill("#subset-text", "Deep Red\ngel-053\n# comment\nnot a real filter"); pg.click("#b-subset"); pg.wait_for_timeout(300)
         check(tag + "subset keeps listed filters", "(2)" in count() and pg.inner_text("#status").startswith("Kept 2"), count() + " " + pg.inner_text("#status"))

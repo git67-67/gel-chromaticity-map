@@ -1,12 +1,12 @@
 {
   "name": "gel-chromaticity-map",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
   "description": "Chromaticity of lighting filters and pigments under any light source, an LED library with CRI and TM-30, and a lab for comparing chromatic adaptation transforms.",
   "scripts": {
     "build": "python3 tools/build.py",
     "check": "python3 tools/build.py --check",
-    "test": "python3 tools/build.py && node tests/maths.mjs && python3 tests/smoke.py && python3 tests/leds.py 150 && python3 tests/pwa.py",
+    "test": "python3 tools/build.py && node tests/maths.mjs && python3 tests/smoke.py && python3 tests/leds.py 150 && python3 tests/pwa.py && python3 tests/persist.py && python3 tests/templates.py",
     "test:scale": "python3 tests/leds.py 1000"
   },
   "license": "MIT"

@@ -55,6 +55,7 @@ async function importFiles(fileList){
   for(const m of metas)for(const [id,name] of m){st.names.set(id,name);const f=st.filters.get(id);if(f){f.name=name;f.code=codeOf(name);f.lab=f.code||name.slice(0,16);}}
   setStatus(`Imported ${nf} ${tk(nf===1?'{filter}':'{filters}')} from ${files.length} file${files.length===1?'':'s'}`+(bad?` · ${bad} skipped (unrecognised format)`:'')+(mode==='add'?` · set now has ${st.filters.size}`:'')+'.',nf?'ok':'err');
   if(!st.sel||!st.filters.has(st.sel))st.sel=firstId();
+  if(nf)usSaveSoon();
   recompute();}
 function setStatus(t,c){const s=$('status');s.textContent=t;s.className='status '+(c||'');}
 /* first entry by number/name; independent of the sort menu because spectra may not be calculated yet */

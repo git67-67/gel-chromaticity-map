@@ -104,3 +104,7 @@ Edit `src/js/lab/cat.js`: add an object to `CATS` with `id`, `name`, `short`, th
 - Wavelength arrays are `Float64Array(N)` on the 380–780 nm grid. Index `i` is `380 + i` nm.
 - Function names are global. Both tabs once defined a `drawSpectrum`; the second silently replaced the first and blanked a plot. Prefix tab-specific functions (`drawSpec` is the map tab's, `drawLabSpectrum` the lab's) and let the smoke test guard it.
 - Rebuild and run both tests before committing; commit `dist/index.html`.
+
+## Saved data
+
+`app/store.js` keeps user-imported spectra per data set in IndexedDB (`gelmap-sets`, key `set:<id>`, plus `last` = last data set used) and builds/restores the backup JSON (`format: gel-chromaticity-map-library`, `sets`, `leds`). `importFiles`, `keepOnly` and Clear call `usSaveSoon()`/`usDelete()`. `loadBuiltin(kind)` shows the saved set if one exists, so a saved set replaces the built-in one until you delete it; data sets with no built-in spectra (LEE, Munsell) appear in the header switch only while a saved set exists (`hasSet`). The LED library saves itself in `led/library.js`. Tests: `tests/persist.py`.
