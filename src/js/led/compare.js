@@ -186,7 +186,7 @@ function cmpUpdate(reframe){if(!cmp.visible){cmp.dirty=true;return;}cmp.dirty=fa
   const LA=cmLight(cmp.A),LB=cmLight(cmp.B);$('cm-readA').innerHTML=cmReadout(LA);$('cm-readB').innerHTML=cmReadout(LB);
   cmpCompute();cmCands();cmRenderSide();cmRenderList();cmRenderPairs();
   if(cmp.res&&(!cmp.sel||!cmp.res.byId.has(cmp.sel)))cmp.sel=cmRows()[0]?.f.id||null;
-  cmRenderDetail();cmDrawSide();if(typeof o1Update==='function')o1Update();if(typeof m1Update==='function')m1Update();if(typeof c3Request==='function'){c3Request();$('cm-3dlab').textContent=cmSpaceName()+' ('+c3Axes().x+', '+c3Axes().y+', '+c3Axes().z+')';}
+  cmRenderDetail();cmDrawSide();if(typeof c3Request==='function'){c3Request();$('cm-3dlab').textContent=cmSpaceName()+' ('+c3Axes().x+', '+c3Axes().y+', '+c3Axes().z+')';}
   const hint='Open dots are the colours under A, filled dots under B (drawn in the colour of the light they give). The line joins the two'+(cmp.mag>1?', stretched ×'+cmp.mag:'')+'. Crosses are the white points.';
   cmLegend();$('cm-note').textContent=hint;
   if(reframe||!cmp.keepFrame){cmp.view.size();cmFrame();cmp.keepFrame=true;}cmp.view.request();}

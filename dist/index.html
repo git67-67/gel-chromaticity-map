@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Gel Chromaticity Map</title>
+<title>Spectral Colour Test Lab</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0b7d8a">
 <link rel="manifest" href="manifest.webmanifest">
@@ -109,6 +109,11 @@ textarea{width:100%;height:110px;font-family:var(--mono);font-size:11px;margin-t
 details.sub{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
 details.sub summary{cursor:pointer;font-weight:600}
 details.sub textarea{height:96px}
+.qm{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-left:6px;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--panel);color:var(--muted);font:600 11px/1 var(--ui);cursor:help;vertical-align:middle;flex:none}
+.qm:hover,.qm:focus-visible,.qm[aria-expanded="true"]{color:var(--fg);border-color:var(--accent);outline:none}
+#help-pop{position:fixed;z-index:80;max-height:70vh;overflow:auto;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--fg);box-shadow:0 8px 28px rgba(0,0,0,.25);font-size:13px;line-height:1.5}
+#help-pop[hidden]{display:none}#help-pop p{margin:8px 0 0}.hp-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.hp-h b{font-size:14px}
+.hp-x{border:0;background:none;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;padding:0 2px}
 /* ---- Adaptation lab ---- */
 :root{--k1:#2a78d6;--k2:#eb6834;--k3:#1baf7a;--k4:#eda100;--k5:#e87ba4;--k6:#008300;--k7:#4a3aa7;--cone-r:#e34948;--cone-g:#008300;--cone-b:#2a78d6}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--k1:#3987e5;--k2:#d95926;--k3:#199e70;--k4:#c98500;--k5:#d55181;--k6:#008300;--k7:#9085e9;--cone-r:#e66767;--cone-g:#008300;--cone-b:#3987e5}}
@@ -243,14 +248,16 @@ html[data-nocode] .item .nm{color:var(--fg)}
 .o1-lnk{color:inherit;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}.o1-lnk:hover{color:var(--accent);text-decoration-color:currentColor}
 .synbox{margin-top:8px}.synctl{display:grid;gap:6px;margin-top:6px}.synctl label{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}.synctl input[type=range]{flex:1 1 120px;min-width:100px}.synctl input[type=number]{width:84px}
 #m1-sum .kv b{white-space:normal;overflow-wrap:anywhere}#m1-sum .kv{margin-bottom:6px}
+.lightsbar{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;padding:8px 12px;margin-bottom:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:13px}
+.lightsbar b{color:var(--muted);text-transform:uppercase;font-size:11px;letter-spacing:.06em;margin-right:4px}.lightsbar .lb-set{color:var(--muted)}.lightsbar .btn{margin-left:auto}
 </style>
 </head>
 <body>
 
 <div class="wrap">
 <header>
-  <h1>Gel Chromaticity Map</h1>
-  <p class="tk">{built} are built in. Pick a light source and see where every {filter} lands on the CIE diagram. The position is the source spectrum multiplied by {mult}, recalculated whenever the source changes.</p>
+  <h1>Spectral Colour Test Lab</h1>
+  <p class="tk">Where {filters} land on the CIE diagram under any light source, how LEDs render colour, and which {filter} gives a wanted colour under another light. {built} are built in; pick a tool below.</p>
 </header>
 <div class="navrow">
 <nav class="tabs" role="tablist" aria-label="Tools">
@@ -258,6 +265,8 @@ html[data-nocode] .item .nm{color:var(--fg)}
   <button role="tab" id="t-lab" aria-selected="false">Adaptation lab</button>
   <button role="tab" id="t-leds" aria-selected="false">LED library</button>
   <button role="tab" id="t-cmp" aria-selected="false">LED compare</button>
+  <button role="tab" id="t-o1" aria-selected="false">Lights for a filter</button>
+  <button role="tab" id="t-m1" aria-selected="false">Filter match</button>
 </nav>
 <div class="seg" id="dsseg" role="group" aria-label="Data set"></div>
 </div>
@@ -549,7 +558,7 @@ html[data-nocode] .item .nm{color:var(--fg)}
 </div>
 <div id="view-cmp" hidden>
 <div class="lab">
-  <p class="intro tk">Pick light A and light B, ideally with the same CCT and Duv but different colour rendering. Every {filter} is worked out from its real spectrum under both lights. The chart shows how far each one moves when you swap A for B. The two colour vector graphics show, hue by hue, what each light does to saturation and hue.</p>
+  <p class="intro tk">Pick light A and light B, ideally with the same CCT and Duv but different colour rendering. Every {filter} is worked out from its real spectrum under both lights. The chart shows how far each one moves when you swap A for B. The two colour vector graphics show, hue by hue, what each light does to saturation and hue. Two more tabs use the lights chosen here: <b>Lights for a filter</b> and <b>Filter match</b>.</p>
   <div class="ctl3">
     <section class="panel">
       <h2>Light A (from)</h2>
@@ -639,38 +648,6 @@ html[data-nocode] .item .nm{color:var(--fg)}
           <p class="hint">Dots show where each light puts the 16 hue bins relative to its own reference light (the circle). A light that matches the reference sits on the circle. Light A and light B are drawn on top of each other so the differences stand out.</p></div>
         <div class="panel"><h2>Spectra and rendering numbers</h2><canvas id="cm-sp" class="sp"></canvas><div class="legend" id="cm-spleg"></div><div id="cm-tab"></div></div>
       </div>
-      <div class="panel" id="o1-p">
-        <h2 id="o1-h">One filter, all lights</h2>
-        <p class="hint" style="margin-top:0">The other way round: pick one filter or pigment and see which lights in the library change it the least, or the most. Uses the white-point, brightness and colour-space settings above.</p>
-        <div class="toolrow">
-          <input type="search" id="o1-fq" placeholder="Search filter…" aria-label="Search filter" style="max-width:150px"><select id="o1-f" aria-label="Filter" style="max-width:220px"></select><button class="btn sm" id="o1-use">Use the selected one</button>
-        </div>
-        <div class="toolrow">
-          <label class="chk" for="o1-ref">Compare with <select id="o1-ref"><option value="A">light A (above)</option><option value="own">each light’s own ideal reference</option></select></label>
-          <label class="chk" for="o1-metric">Change in <select id="o1-metric"><option value="apparent">colour and brightness together (ΔE)</option><option value="shift">colour only (Δu′v′)</option><option value="bright">brightness only</option></select></label>
-          <label class="chk" for="o1-dir">Order <select id="o1-dir"><option value="least">smallest change first</option><option value="most">largest change first</option></select></label>
-          <label class="chk">CCT <input type="number" id="o1-c0" placeholder="from K" style="width:92px" aria-label="CCT from"> – <input type="number" id="o1-c1" placeholder="to K" style="width:92px" aria-label="CCT to"></label>
-        </div>
-        <p class="note" id="o1-sum"></p>
-        <canvas id="o1-cv" class="sp" aria-label="Change of the chosen filter against CCT, one dot per light"></canvas>
-        <div class="note" id="o1-sel"></div>
-        <div id="o1-tab" style="max-height:420px;overflow:auto"></div>
-        <div class="row" style="margin-top:8px"><button class="btn sm" id="o1-more" hidden>Show more</button></div>
-        <p class="hint">“Each light’s own ideal reference” compares the filter under every light with the same filter under a perfectly rendering light of the same colour temperature, so the ranking shows which lights show this filter most faithfully. With “light A” the ranking shows which lights are closest to (or furthest from) A. Click a column heading to sort by it, and click a light’s name to open it in the LED library. Colour dots show the colour the filter has under each light (left: reference, right: that light); in the brightness view they are darkened by how much light gets through.</p>
-      </div>
-      <div class="panel" id="m1-p">
-        <h2>Find a filter for a colour</h2>
-        <p class="hint" style="margin-top:0">Pick a filter that gives the colour you want under light A (for example your 2700 K LED), then find the filters that give the closest colour under light B (for example a 6500 K LED). Lights A and B are the ones chosen at the top, library or synthetic with the sliders.</p>
-        <div class="toolrow">
-          <input type="search" id="m1-fq" placeholder="Search filter…" aria-label="Search filter" style="max-width:150px"><select id="m1-f" aria-label="Filter under light A" style="max-width:220px"></select><button class="btn sm" id="m1-use">Use the selected one</button>
-          <label class="chk" for="m1-mode">Match <select id="m1-mode"><option value="colour">colour only (Δu′v′)</option><option value="both">colour and brightness (ΔE)</option></select></label>
-        </div>
-        <div id="m1-sum"></div>
-        <canvas id="m1-cv" class="sp" aria-label="Colours of all filters under light B, around the target colour"></canvas>
-        <div id="m1-tab" style="max-height:420px;overflow:auto"></div>
-        <div class="row" style="margin-top:8px"><button class="btn sm" id="m1-more" hidden>Show more</button></div>
-        <p class="hint">The colour is the colour of the light that leaves the filter, in u′v′, so a match means the two lights look the same side by side. It is not corrected for the eye adapting to a warmer or cooler white. “Light out” is the share of the bare light that gets through, at equal lumens of the two bare lights; a filter that matches in colour can still need more or less light. In the chart the cross is the target, the dashed ring is where the same filter lands under B, and the dots are the filters under B; the ringed dot is the best match.</p>
-      </div>
       <div class="panel"><h2 id="cm-pairs-h">Biggest changes between A and B</h2><div class="pairs" id="cm-pairs"></div>
         <p class="hint" id="cm-pairs-hint"></p></div>
     </section>
@@ -686,6 +663,48 @@ html[data-nocode] .item .nm{color:var(--fg)}
       </section>
     </aside>
   </div>
+</div>
+</div>
+<div id="view-o1" hidden>
+<div class="lab">
+  <div class="lightsbar" id="o1-lights"></div>
+      <div class="panel" id="o1-p">
+        <h2 id="o1-h">One filter, all lights</h2>
+        <p class="hint" style="margin-top:0">The other way round: pick one filter or pigment and see which lights in the library change it the least, or the most. Uses the lights and settings chosen in LED compare (see the strip above).</p>
+        <div class="toolrow">
+          <input type="search" id="o1-fq" placeholder="Search filter…" aria-label="Search filter" style="max-width:150px"><select id="o1-f" aria-label="Filter" style="max-width:220px"></select><button class="btn sm" id="o1-use">Use the selected one</button>
+        </div>
+        <div class="toolrow">
+          <label class="chk" for="o1-ref">Compare with <select id="o1-ref"><option value="A">light A</option><option value="own">each light’s own ideal reference</option></select></label>
+          <label class="chk" for="o1-metric">Change in <select id="o1-metric"><option value="apparent">colour and brightness together (ΔE)</option><option value="shift">colour only (Δu′v′)</option><option value="bright">brightness only</option></select></label>
+          <label class="chk" for="o1-dir">Order <select id="o1-dir"><option value="least">smallest change first</option><option value="most">largest change first</option></select></label>
+          <label class="chk">CCT <input type="number" id="o1-c0" placeholder="from K" style="width:92px" aria-label="CCT from"> – <input type="number" id="o1-c1" placeholder="to K" style="width:92px" aria-label="CCT to"></label>
+        </div>
+        <p class="note" id="o1-sum"></p>
+        <canvas id="o1-cv" class="sp" aria-label="Change of the chosen filter against CCT, one dot per light"></canvas>
+        <div class="note" id="o1-sel"></div>
+        <div id="o1-tab" style="max-height:420px;overflow:auto"></div>
+        <div class="row" style="margin-top:8px"><button class="btn sm" id="o1-more" hidden>Show more</button></div>
+        <p class="hint">“Each light’s own ideal reference” compares the filter under every light with the same filter under a perfectly rendering light of the same colour temperature, so the ranking shows which lights show this filter most faithfully. With “light A” the ranking shows which lights are closest to (or furthest from) A. Click a column heading to sort by it, and click a light’s name to open it in the LED library. Colour dots show the colour the filter has under each light (left: reference, right: that light); in the brightness view they are darkened by how much light gets through.</p>
+      </div>
+</div>
+</div>
+<div id="view-m1" hidden>
+<div class="lab">
+  <div class="lightsbar" id="m1-lights"></div>
+      <div class="panel" id="m1-p">
+        <h2>Find a filter for a colour</h2>
+        <p class="hint" style="margin-top:0">Pick a filter that gives the colour you want under light A (for example your 2700 K LED), then find the filters that give the closest colour under light B (for example a 6500 K LED). Lights A and B are the ones chosen in LED compare (library lights, or synthetic ones with sliders).</p>
+        <div class="toolrow">
+          <input type="search" id="m1-fq" placeholder="Search filter…" aria-label="Search filter" style="max-width:150px"><select id="m1-f" aria-label="Filter under light A" style="max-width:220px"></select><button class="btn sm" id="m1-use">Use the selected one</button>
+          <label class="chk" for="m1-mode">Match <select id="m1-mode"><option value="colour">colour only (Δu′v′)</option><option value="both">colour and brightness (ΔE)</option></select></label>
+        </div>
+        <div id="m1-sum"></div>
+        <canvas id="m1-cv" class="sp" aria-label="Colours of all filters under light B, around the target colour"></canvas>
+        <div id="m1-tab" style="max-height:420px;overflow:auto"></div>
+        <div class="row" style="margin-top:8px"><button class="btn sm" id="m1-more" hidden>Show more</button></div>
+        <p class="hint">The colour is the colour of the light that leaves the filter, in u′v′, so a match means the two lights look the same side by side. It is not corrected for the eye adapting to a warmer or cooler white. “Light out” is the share of the bare light that gets through, at equal lumens of the two bare lights; a filter that matches in colour can still need more or less light. In the chart the cross is the target, the dashed ring is where the same filter lands under B, and the dots are the filters under B; the ringed dot is the best match.</p>
+      </div>
 </div>
 </div>
 </div>
@@ -1478,7 +1497,7 @@ function renderDetail(){
   <canvas id="sp"></canvas>
   <div class="legend"><span><i style="border-color:var(--muted);border-top-style:solid;opacity:.6"></i>Source</span><span><i style="border-color:var(--fg);border-top-style:dashed"></i>${tk('{curve}')}</span><span><i style="border-color:var(--accent)"></i>Resulting light</span></div>`;
   drawSpec(f);}
-function renderAll(){renderSource();renderList();renderDetail();requestDraw();if(window.labRefresh)labRefresh();if(window.cmpRefresh)cmpRefresh();}
+function renderAll(){renderSource();renderList();renderDetail();requestDraw();if(window.labRefresh)labRefresh();if(window.cmpRefresh)cmpRefresh();if(window.o1Refresh)o1Refresh();if(window.m1Refresh)m1Refresh();}
 
 /* ---- app/theme.js ---- */
 /* ---- theme colours ---- */
@@ -2044,15 +2063,17 @@ $('lb-neutral').onchange=e=>{lab.skipNeutral=e.target.checked;computeStats();ren
 
 /* ---- lab/tabs.js ---- */
 /* ---------- tabs ---------- */
-const TABS={map:{view:'view-map',btn:'t-map',hash:''},lab:{view:'view-lab',btn:'t-lab',hash:'#lab'},leds:{view:'view-leds',btn:'t-leds',hash:'#leds'},cmp:{view:'view-cmp',btn:'t-cmp',hash:'#compare'}};
+const TABS={map:{view:'view-map',btn:'t-map',hash:''},lab:{view:'view-lab',btn:'t-lab',hash:'#lab'},leds:{view:'view-leds',btn:'t-leds',hash:'#leds'},cmp:{view:'view-cmp',btn:'t-cmp',hash:'#compare'},o1:{view:'view-o1',btn:'t-o1',hash:'#filter-lights'},m1:{view:'view-m1',btn:'t-m1',hash:'#filter-match'}};
 function showTab(which){const isLab=which==='lab';
   for(const k in TABS){$(TABS[k].view).hidden=k!==which;$(TABS[k].btn).setAttribute('aria-selected',k===which);}
-  lab.visible=isLab;ld.visible=which==='leds';cmp.visible=which==='cmp';
+  lab.visible=isLab;ld.visible=which==='leds';cmp.visible=which==='cmp';o1.visible=which==='o1';m1.visible=which==='m1';
   try{history.replaceState(null,'',TABS[which].hash||location.pathname+location.search);}catch(e){}
   if(isLab){requestAnimationFrame(()=>{fillSrc();view.size();if(lab.dirty||!lab.res)labUpdate();else{drawLabSpectrum();view.request();}
     if(!lab.framed){lab.framed=true;if(lab.mode==='one'&&lab.follow)frameErrors();}});}
   else if(which==='leds')ledsShow();
   else if(which==='cmp')cmpShow();
+  else if(which==='o1')requestAnimationFrame(o1Update);
+  else if(which==='m1')requestAnimationFrame(m1Update);
   else{requestAnimationFrame(()=>{if(st.sel&&st.filters.has(st.sel))select(st.sel,true);});}}
 for(const k in TABS)$(TABS[k].btn).onclick=()=>showTab(k);
 
@@ -2421,7 +2442,7 @@ function cmpUpdate(reframe){if(!cmp.visible){cmp.dirty=true;return;}cmp.dirty=fa
   const LA=cmLight(cmp.A),LB=cmLight(cmp.B);$('cm-readA').innerHTML=cmReadout(LA);$('cm-readB').innerHTML=cmReadout(LB);
   cmpCompute();cmCands();cmRenderSide();cmRenderList();cmRenderPairs();
   if(cmp.res&&(!cmp.sel||!cmp.res.byId.has(cmp.sel)))cmp.sel=cmRows()[0]?.f.id||null;
-  cmRenderDetail();cmDrawSide();if(typeof o1Update==='function')o1Update();if(typeof m1Update==='function')m1Update();if(typeof c3Request==='function'){c3Request();$('cm-3dlab').textContent=cmSpaceName()+' ('+c3Axes().x+', '+c3Axes().y+', '+c3Axes().z+')';}
+  cmRenderDetail();cmDrawSide();if(typeof c3Request==='function'){c3Request();$('cm-3dlab').textContent=cmSpaceName()+' ('+c3Axes().x+', '+c3Axes().y+', '+c3Axes().z+')';}
   const hint='Open dots are the colours under A, filled dots under B (drawn in the colour of the light they give). The line joins the two'+(cmp.mag>1?', stretched ×'+cmp.mag:'')+'. Crosses are the white points.';
   cmLegend();$('cm-note').textContent=hint;
   if(reframe||!cmp.keepFrame){cmp.view.size();cmFrame();cmp.keepFrame=true;}cmp.view.request();}
@@ -2565,12 +2586,22 @@ function c3View(name){c3.zoom=1;if(name==='top'){c3.yaw=0;c3.pitch=Math.PI/2;}el
   $('c3-3d').onclick=()=>c3View('3d');$('c3-top').onclick=()=>c3View('top');$('c3-side').onclick=()=>c3View('side');
   new ResizeObserver(()=>{if(cmp.visible)c3Request();}).observe($('cm-3dwrap'));})();
 
+/* ---- led/lightsbar.js ---- */
+/* The strip at the top of "Lights for a filter" and "Filter match": which lights A and B are, and a button to change them in LED compare. */
+function lbOne(L,tag){if(!L)return`<span><b>${tag}</b> none chosen</span>`;const q=L.q;
+  return`<span><b>${tag}</b> ${esc(L.name)}${q&&q.cct?' · '+Math.round(q.cct)+' K':''}${q&&q.cri?' · Ra '+Math.round(q.cri.Ra):''}</span>`;}
+function lbRender(id,both){const el=$(id);if(!el)return;
+  const wp=cmp.wp.mode==='none'?'':' · white point: '+esc(cmpWpName(cmp.wp)),
+    set=both?'':'<span class="lb-set">Settings from LED compare: '+(cmp.equal==='power'?'equal watts':'equal lumens')+' · '+cmSpaceName()+' for ΔE'+wp+'</span>';
+  el.innerHTML=lbOne(cmLight(cmp.A),'Light A')+(both?lbOne(cmLight(cmp.B),'Light B'):'')+set+'<button class="btn sm" type="button" data-lb="go">Change lights in LED compare</button>';}
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('[data-lb="go"]')){showTab('cmp');requestAnimationFrame(()=>{const a=$('cm-pickA');if(a)a.scrollIntoView({block:'center'});});}});
+
 /* ---- led/onefilter.js ---- */
 /* LED compare, section "One filter, all lights": the other way round from the pair view. Pick one filter / pigment and a
    reference (light A, or each light's own ideal reference at the same CCT) and see which lights in the library change
    how it looks the least or the most: colour shift, brightness, or both together (ΔE). Uses cmpCtx / cmpRowOf from compare.js,
    so the white-point treatment, equal lumens / watts and CIELUV / CAM02-UCS settings are the ones chosen above. */
-const o1={f:null,ref:'A',metric:'apparent',dir:'least',fq:'',c0:'',c1:'',res:[],sel:null,sk:null,sd:1,shown:30,raf:0,pts:[],refSpd:new Map()};
+const o1={visible:false,f:null,ref:'A',metric:'apparent',dir:'least',fq:'',c0:'',c1:'',res:[],sel:null,sk:null,sd:1,shown:30,raf:0,pts:[],refSpd:new Map()};
 function o1RefOf(it){if(!it.q.ok)return null;const k=it.id+'|'+Math.round(it.q.cct);let r=o1.refSpd.get(k);
   if(r===undefined){const x=ledReference(it);r=x?{id:'ref:'+it.id,name:'Ideal reference for '+it.name,spd:x.spd}:null;o1.refSpd.set(k,r);}return r;}
 const o1Mag=r=>o1.metric==='bright'?Math.abs(r.row.stops):o1.metric==='shift'?r.row.shift:r.row.d.dE;
@@ -2592,12 +2623,12 @@ function o1Sync(){const f=o1.f&&st.filters.get(o1.f);
   const sel=$('o1-f');sel.innerHTML=list.slice(0,300).map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('')||'<option value="">No match</option>';
   if(f&&list.slice(0,300).includes(f))sel.value=f.id;else if(list.length&&!list.slice(0,300).includes(f)){o1.f=list[0].id;sel.value=o1.f;}
   $('o1-ref').value=o1.ref;$('o1-metric').value=o1.metric;$('o1-dir').value=o1.dir;}
-function o1Render(){const R=o1.res,f=o1.f&&st.filters.get(o1.f),tab=$('o1-tab'),sum=$('o1-sum'),nm=cmSpaceName();
+function o1Render(){lbRender('o1-lights',false);const R=o1.res,f=o1.f&&st.filters.get(o1.f),tab=$('o1-tab'),sum=$('o1-sum'),nm=cmSpaceName();
   const lab={apparent:'ΔE ('+nm+')',shift:'Δu′v′ × 1000',bright:'Brightness'}[o1.metric];
   $('o1-h').textContent=f?`How lights change ${f.name}`:'One filter, all lights';
   $('o1-more').hidden=true;
   if(!f){sum.textContent='Pick a filter or pigment.';tab.innerHTML='';o1Plot();return;}
-  if(!R.length){sum.textContent=o1.ref==='A'&&!cmLight(cmp.A)?'Pick light A above.':'No light in the library matches (the CCT limits may be too narrow, or the library has only the built-in lights).';tab.innerHTML='';o1Plot();return;}
+  if(!R.length){sum.textContent=o1.ref==='A'&&!cmLight(cmp.A)?'Pick light A in LED compare.':'No light in the library matches (the CCT limits may be too narrow, or the library has only the built-in lights).';tab.innerHTML='';o1Plot();return;}
   const first=R[0],last=R[R.length-1],lo=o1.dir==='least'?first:last,hi=o1.dir==='least'?last:first,ref=o1.ref==='A'?'under '+esc(cmLight(cmp.A).name):'under its own ideal reference light of the same CCT';
   const desc=r=>`<b>${esc(r.it.name)}</b> (${o1.metric==='bright'?sgn(r.row.bright*100,0,' %'):o1Unit(r)})`;
   sum.innerHTML=`Compared with the same filter ${ref}, of ${R.length} lights, <b>${esc(f.name)}</b> changes least with ${desc(lo)} and most with ${desc(hi)}. Metric: ${lab}${o1.metric==='bright'?', '+(cmp.equal==='power'?'equal radiant power':'equal lumens'):''}.${cmp.wp.mode==='none'?'':' White-point method: '+esc(cmpWpName(cmp.wp))+'.'}`;
@@ -2617,7 +2648,7 @@ function o1Plot(){const cv=$('o1-cv');if(!cv)return;if(!cols.fg)readCols();const
   c.textAlign='center';c.textBaseline='top';for(let i=0;i<=4;i++){const v=x0+(x1-x0)*i/4;c.fillText(Math.round(v/10)*10,X(v),h-P.b+5);}
   c.save();c.translate(11,(P.t+h-P.b)/2);c.rotate(-Math.PI/2);c.textAlign='center';c.textBaseline='top';c.fillText(o1.metric==='bright'?'stops':o1.metric==='shift'?'Δu′v′ × 1000':'ΔE',0,0);c.restore();c.textBaseline='top';c.fillText('CCT (K)',(P.l+w-P.r)/2,h-14);
   for(const r of R){const sel=r.it.id===o1.sel,x=X(r.it.q.cct),y=Y(val(r));c.fillStyle=o1Col(r,'B',o1.ym||1);c.strokeStyle=sel?cols.fg:cols.muted;c.lineWidth=sel?2:.8;c.beginPath();c.arc(x,y,sel?5.5:3.4,0,7);c.fill();c.stroke();o1.pts.push({x,y,id:r.it.id});}}
-function o1Update(){if(!cmp.visible||!$('o1-h'))return;if(o1.raf)return;o1.raf=requestAnimationFrame(()=>{o1.raf=0;
+function o1Update(){if(!o1.visible||!$('o1-h'))return;if(o1.raf)return;o1.raf=requestAnimationFrame(()=>{o1.raf=0;
   if(!o1.f||!st.filters.has(o1.f))o1.f=(cmp.sel&&st.filters.has(cmp.sel)?cmp.sel:[...st.filters.keys()][0])||null;
   o1Sync();o1Compute();o1.shown=Math.max(30,Math.min(o1.shown,o1.res.length));o1Render();});}
 function o1Redo(reset){if(reset)o1.shown=30;o1Compute();o1Render();}
@@ -2635,17 +2666,21 @@ function o1Redo(reset){if(reset)o1.shown=30;o1Compute();o1Render();}
   g('o1-tab').addEventListener('click',e=>{const h=e.target.closest('.srt');if(h){sortBy(h.dataset.k);return;}
     const l=e.target.closest('.o1-lnk');if(l){e.preventDefault();const id=l.dataset.id;ld.sel=id;showTab('leds');requestAnimationFrame(()=>requestAnimationFrame(()=>ldSelect(id,true)));return;}
     const r=e.target.closest('.cand');if(r){o1.sel=r.dataset.id;o1Render();}});
-  g('o1-sel').addEventListener('click',e=>{if(e.target.id==='o1-b'&&o1.sel){cmp.B=o1.sel;cmp.keepFrame=false;cmpUpdate(true);}});
+  g('o1-sel').addEventListener('click',e=>{if(e.target.id==='o1-b'&&o1.sel){cmp.B=o1.sel;cmp.keepFrame=false;showTab('cmp');}});
   const cv=g('o1-cv');cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*cv.clientWidth/r.width,y=(e.clientY-r.top)*cv.clientHeight/r.height;
     let b=null,bd=144;for(const q of o1.pts){const d=(q.x-x)**2+(q.y-y)**2;if(d<bd){bd=d;b=q;}}if(b){o1.sel=b.id;const i=o1.res.findIndex(z=>z.it.id===b.id);if(i>=o1.shown)o1.shown=i+1;o1Render();}});
 })();
+
+window.o1Refresh=()=>{if(o1.visible)o1Update();};LED.listeners.push(()=>{if(o1.visible)o1Update();});
+function o1Theme(){if(o1.visible)o1Update();}matchMedia('(prefers-color-scheme: dark)').addEventListener('change',o1Theme);new MutationObserver(o1Theme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+new ResizeObserver(()=>{if(o1.visible)o1Plot();}).observe($('o1-p'));
 
 /* ---- led/match.js ---- */
 /* LED compare, section "Find a filter for a colour": take one filter under light A, note the colour it lands on, and find the filters
    that give the closest colour under light B (for example: a 2700 K LED with a colour filter, and now a 6500 K LED needs the same colour).
    Compared as emitted colour in u'v' (no white-point adaptation), at equal luminous flux of the two bare lights. Lights A and B are
    the ones chosen above, library or synthetic. */
-const m1={f:null,fq:'',mode:'colour',res:[],tgt:null,sel:null,shown:15,raf:0,pts:[]};
+const m1={visible:false,f:null,fq:'',mode:'colour',res:[],tgt:null,sel:null,shown:15,raf:0,pts:[]};
 const m1Pt=(s,s0)=>{const c=chroma(...s),q=cctDuv(c.u,c.v);return{...c,cct:q.cct,duv:q.duv,y:c.y,Y:s[1]/s0[1]};};
 function m1Compute(){m1.res=[];m1.tgt=null;const f=m1.f&&st.filters.get(m1.f),LA=cmLight(cmp.A),LB=cmLight(cmp.B);if(!f||!LA||!LB)return;
   if(!f.T)f.T=resample(f.wl,f.v,st.edge);
@@ -2661,8 +2696,8 @@ function m1Sync(){const q=m1.fq.toLowerCase().split(/\s+/).filter(Boolean),list=
     sel=$('m1-f'),shown=list.slice(0,300);sel.innerHTML=shown.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('')||'<option value="">No match</option>';
   const f=m1.f&&st.filters.get(m1.f);if(f&&shown.includes(f))sel.value=f.id;else if(shown.length){m1.f=shown[0].id;sel.value=m1.f;}
   $('m1-mode').value=m1.mode;}
-function m1Render(){const el=$('m1-sum'),tab=$('m1-tab'),G=m1.tgt;$('m1-more').hidden=true;
-  if(!G){el.textContent=cmLight(cmp.A)&&cmLight(cmp.B)?'This filter lets no light through under light A.':'Pick lights A and B above.';tab.innerHTML='';m1Plot();return;}
+function m1Render(){lbRender('m1-lights',true);const el=$('m1-sum'),tab=$('m1-tab'),G=m1.tgt;$('m1-more').hidden=true;
+  if(!G){el.textContent=cmLight(cmp.A)&&cmLight(cmp.B)?'This filter lets no light through under light A.':'Pick lights A and B in LED compare.';tab.innerHTML='';m1Plot();return;}
   const R=m1.res,f=G.f,top=R[0];
   el.innerHTML=`<div class="readout" style="grid-template-columns:1fr"><div class="kv"><span>${esc(f.name)} under A (${esc(G.LA.name)})</span><b>${m1Fmt(G.T)}</b></div>`+
     `<div class="kv"><span>the same under B (${esc(G.LB.name)})</span><b>${m1Fmt(G.same)}</b></div>`+
@@ -2682,7 +2717,7 @@ function m1Plot(){const cv=$('m1-cv');if(!cv)return;if(!cols.fg)readCols();const
     c.fillStyle=cmpColor(r.C);c.strokeStyle=sel||top?cols.fg:cols.muted;c.lineWidth=sel||top?2:.8;c.beginPath();c.arc(x,y,sel?5.5:top?5:3.2,0,7);c.fill();c.stroke();m1.pts.push({x,y,id:r.g.id});}
   if(G.same){const x=X(G.same.up),y=Y(G.same.vp);c.strokeStyle=cols.fg;c.setLineDash([3,3]);c.lineWidth=1.4;c.beginPath();c.arc(x,y,6,0,7);c.stroke();c.setLineDash([]);c.fillStyle=cols.fg;c.textAlign='left';c.textBaseline='bottom';c.fillText('same filter under B',x+8,y-4);}
   c.strokeStyle=lc.k[0];c.lineWidth=2.2;c.beginPath();c.moveTo(cx-8,cy);c.lineTo(cx+8,cy);c.moveTo(cx,cy-8);c.lineTo(cx,cy+8);c.stroke();c.fillStyle=lc.k[0];c.font='bold 11px '+FM;c.textAlign='left';c.textBaseline='bottom';c.fillText('target',cx+10,cy-6);}
-function m1Update(){if(!cmp.visible||!$('m1-p'))return;if(m1.raf)return;m1.raf=requestAnimationFrame(()=>{m1.raf=0;
+function m1Update(){if(!m1.visible||!$('m1-p'))return;if(m1.raf)return;m1.raf=requestAnimationFrame(()=>{m1.raf=0;if(!cmp.B&&cmp.A)cmp.B='ref:'+cmp.A;
   if(!m1.f||!st.filters.has(m1.f))m1.f=(o1.f&&st.filters.has(o1.f)?o1.f:null)||(cmp.sel&&st.filters.has(cmp.sel)?cmp.sel:[...st.filters.keys()][0])||null;
   m1Sync();m1Compute();m1.shown=Math.max(15,Math.min(m1.shown,m1.res.length));m1Render();});}
 function m1Redo(reset){if(reset)m1.shown=15;m1Compute();m1Render();}
@@ -2696,6 +2731,72 @@ function m1Redo(reset){if(reset)m1.shown=15;m1Compute();m1Render();}
   const cv=g('m1-cv');cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*cv.clientWidth/r.width,y=(e.clientY-r.top)*cv.clientHeight/r.height;
     let b=null,bd=144;for(const q of m1.pts){const d=(q.x-x)**2+(q.y-y)**2;if(d<bd){bd=d;b=q;}}if(b){m1.sel=b.id;const i=m1.res.findIndex(z=>z.g.id===b.id);if(i>=m1.shown)m1.shown=i+1;m1Render();}});
 })();
+
+window.m1Refresh=()=>{if(m1.visible)m1Update();};LED.listeners.push(()=>{if(m1.visible)m1Update();});
+function m1Theme(){if(m1.visible)m1Update();}matchMedia('(prefers-color-scheme: dark)').addEventListener('change',m1Theme);new MutationObserver(m1Theme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+new ResizeObserver(()=>{if(m1.visible)m1Plot();}).observe($('m1-p'));
+
+/* ---- app/help.js ---- */
+/* Help: a small "?" next to every setting that is not obvious. Hover or focus shows the short line (title attribute), a click opens the
+   longer explanation. HELP holds the texts, HELP_AT says which element each one belongs to (a CSS selector -> key). Nothing else in the
+   page needs to know about it: helpInit() adds the buttons after all modules have loaded. */
+const HELP={
+wp:{t:'White-point difference',s:'Removes the part of the change that is just “the whole picture got warmer or cooler”.',p:[
+  'Two lights usually have different white points, for example a warm 2700 K and a cool 6500 K. Every colour then moves partly just because the whole scene turned warmer or cooler, not because one light renders that colour differently from the other.',
+  'This setting takes that overall shift out, so what is left is how the light changes each colour relative to the others. The methods differ in how they model the eye getting used to the new white:',
+  '• Off: the real difference, white point included.\n• Plain shift: every colour is moved by the vector between the two white points.\n• CRI method: von Kries scaling in CIE 1960 u,v, as the colour rendering index does.\n• TM-30 method: the CAT02 transform with complete adaptation, as inside CIECAM02.\n• Matrix CAT: any transform from the Adaptation lab.']},
+anchor:{t:'Move colours to the white of…',s:'Which light is the reference when the white points are matched.',p:['“Light A” moves the colours seen under B to A’s white. “Light B” does it the other way round. The ΔE in CIELUV is also measured against the reference light’s white.']},
+dmode:{t:'Degree of adaptation D',s:'How completely the eye is assumed to adapt to the new white.',p:['D = 1 means the eye has fully adapted: a white sheet looks white under either light. Smaller values mean partial adaptation, which is typical for dim or mixed lighting.','“From viewing conditions” works D out from the brightness of the surroundings (L_A) and the surround factor F, with the CIECAM02 formula. “Fixed value” lets you type D yourself.']},
+la:{t:'Adapting luminance L_A',s:'How bright the surroundings are, in cd/m².',p:['Used only to work out D from the viewing conditions. A bright office is around 100 cd/m²; a dim room much less. 64 cd/m² is the value used for the CIECAM02 examples (20 % of a 320 cd/m² white).']},
+surround:{t:'Surround factor F',s:'Average, dim or dark surround (1, 0.9, 0.8).',p:['Part of the CIECAM02 formula for D. Average is normal room lighting; dim is a living room with a TV; dark is a cinema.']},
+metric:{t:'What the chart and tiles show',s:'Colour shift, brightness, both together, or absorbed energy.',p:['• Colour shift: how far the colour moves on the chromaticity diagram (Δu′v′), at equal brightness: hue and saturation only.\n• Brightness: how much lighter or darker the filtered light is under B than under A.\n• Apparent change (ΔE): colour and brightness together as one number: the distance between the two colours in a perceptual colour space. Around 1 is barely visible side by side; above 5 is a clear difference.\n• Absorbed energy: how many percentage points more or less of the light’s radiant energy the filter absorbs under B.']},
+space:{t:'Colour space for ΔE',s:'CIELUV (simple) or CAM02-UCS (adapts to each light).',p:[
+  'ΔE is the distance between two colours in a space where distance roughly matches how different they look. The two choices differ in how they treat the colour of the light itself.',
+  'CIELUV compares everything against ONE common white: the white of the reference light (see “Move colours to the white of…”). A colour that looks orange under a 2700 K light stays orange in the numbers, because the light’s own warm tint is counted as part of the change.',
+  'CAM02-UCS is a colour appearance model: it judges each colour against the white of its OWN light, because the eye adjusts to the light it is in (“each colour adapts to its own light”). A white sheet under 2700 K light and under 6500 K light then both count as white, and only what the filter does on top of that remains. Use it when you want to know how different the two scenes look to someone standing in each. The white-point setting above is ignored with it, because the adaptation is built in.',
+  'Rule of thumb: CIELUV for the real physical difference between the two lights, CAM02-UCS for the perceived one.']},
+equal:{t:'Brightness basis',s:'Equal lumens or equal watts of the two bare lights.',p:['Equal lumens: both lights are assumed to look equally bright without any filter. A filter’s brightness change then only shows how its colour suits each light’s spectrum.','Equal watts: both lights emit the same radiant power. A light that makes more lumens per watt then looks brighter, and that extra difference is added to every filter.']},
+mag:{t:'Whisker magnification',s:'Stretches the shifts so small differences are visible.',p:['Each line runs from the colour under A (open dot) to the colour under B. With magnification above ×1 the line is stretched, but the open dot stays at the true position under A. Useful for lights that are close to each other.']},
+planck:{t:'Planckian locus',s:'The colours of ideal glowing bodies from warm to cool.',p:['The curve is where a heated black body sits on the diagram, from red-orange (low CCT) through white to blue (high CCT). Lights close to it look like natural white light.']},
+fig3d:{t:'3D view',s:'Brightness and colour of every item under A and B in one space.',p:['Vertical axis: lightness. Horizontal plane: colour, grey in the middle, more saturated further out. A line that goes only up or down is a pure brightness change, one that goes only sideways a pure colour change. The straight-line distance between the two dots is ΔE. Drag to rotate, wheel to zoom, click a dot to select it.']},
+dot:{t:'Dot colour (3D view)',s:'Real colour and brightness, or the “Show” colour scale.',p:['“Actual colour and brightness” paints each dot the way the filtered light really looks (the bare light’s white is full brightness, so dark filters look dark). The other choice colours the B dots by the metric chosen under “Show”.']},
+partner:{t:'Find a partner for A',s:'Lights with the same colour point but different colour rendering.',p:['A fair comparison of colour rendering needs two lights that look the same white. This list shows library lights within the CCT and Duv limits you set, so any difference you see comes from the spectrum, not from the white point. Click a row to make it light B.']},
+tc:{t:'CCT tolerance',s:'How far the colour temperature may differ, in kelvin.',p:['CCT (correlated colour temperature) says how warm or cool a white is: 2700 K is warm, 6500 K is daylight.']},
+duv:{t:'Duv',s:'Distance of the light’s colour from the blackbody curve; + greenish, − pinkish.',p:['Two lights can have the same CCT but different tints. Duv measures that: 0 is exactly on the blackbody curve (like a candle or a halogen lamp), positive values are greener, negative values more pink or magenta. Typical white LEDs lie between −0.006 and +0.006.']},
+synon:{t:'Synthetic light',s:'A calculated light with a CCT and Duv you choose with sliders.',p:['Instead of a measured LED, the light is calculated: a blackbody (like a halogen lamp), CIE daylight (D-series, from 4000 K) or the TM-30 reference light, which is a blackbody at low CCT, daylight at high CCT and a mixture around 5000 K. These are ideal, perfectly rendering lights (Ra and Rf near 100).']},
+synduv:{t:'Duv for a synthetic light',s:'Moves the light off the blackbody curve: + greener, − more magenta.',p:['The spectrum gets a green bump (positive Duv) or a magenta pair of bumps (negative Duv) until the requested Duv is reached, so the light is no longer a perfect reference but still has the CCT you set. The measured CCT and Duv are shown under the picker.']},
+o1ref:{t:'Compare with…',s:'The light you compare every other light against.',p:['“Light A” ranks the lights by how close the filter looks to what it looks like under A. “Each light’s own ideal reference” compares the filter under every light with the same filter under a perfectly rendering light of the same colour temperature (the TM-30 reference), so the list shows which lights render this particular filter most faithfully.']},
+o1change:{t:'Change in…',s:'Colour and brightness (ΔE), colour only, or brightness only.',p:['“Colour and brightness together” uses the ΔE of the colour space set in LED compare. “Colour only” is the distance on the chromaticity diagram (Δu′v′). “Brightness only” is the change in the amount of light that gets through, in stops.']},
+o1order:{t:'Order',s:'Smallest or largest change first.',p:['Click a column heading in the table to sort by that column instead.']},
+o1cct:{t:'CCT limits',s:'Only rank lights between these colour temperatures.',p:['Comparing a 2700 K light with a 6500 K light mostly measures the white point. Limiting the range keeps the ranking among lights you could actually swap.']},
+m1:{t:'Find a filter for a colour',s:'Which filter gives under B the colour another filter gives under A.',p:['Take a filter you like under light A (say a 2700 K LED). The tab shows the colour the light has after it, then ranks all filters by how close their colour is under light B (say a 6500 K LED).','The colour compared is the colour of the light that leaves the filter on the u′v′ diagram, with no correction for the eye adapting to the two whites. So “same colour” means the two beams look the same side by side. Brightness can still differ a lot: see “Light out”.','If the target needs a colour the light B cannot produce (for example deep red from a 6500 K light with little red), the best match stays far away; the distance column shows how far.']},
+m1mode:{t:'Match by…',s:'Colour only, or colour and brightness together.',p:['“Colour only” ranks by the distance on the chromaticity diagram. “Colour and brightness” ranks by ΔE, which also penalises a filter that lets much more or less light through than the target.']},
+edge:{t:'Outside the measured range',s:'What to assume where a filter was not measured.',p:['Many filters are measured only between about 400 and 700 nm. “Hold the end values” repeats the last measured value out to the ends of the visible range (safer for most filters); “Treat as zero” assumes nothing gets through.']},
+cct:{t:'Colour temperature (CCT)',s:'How warm or cool a white light is, in kelvin.',p:['2700 K is a warm incandescent white, 4000 K neutral, 6500 K daylight. Lower is more orange, higher more blue.']},
+ldby:{t:'Colour points by',s:'Colours the dots by a rendering number.',p:['Ra and R9 are CRI numbers; Rf (fidelity) and Rg (gamut) are TM-30 numbers. High Rf means colours look like they do under a natural light of the same temperature; Rg above 100 means colours look more saturated, below 100 more washed out.']},
+cri:{t:'CRI and TM-30 numbers',s:'Ra, R9, Rf and Rg describe how truthfully a light shows colours.',p:['Ra: the average CRI of 8 pastel samples, 100 = identical to the reference light. R9: how well a saturated red is shown. Rf: the TM-30 fidelity, from 99 samples. Rg: the TM-30 gamut, whether saturation is raised (above 100) or lowered (below 100).']}
+};
+const HELP_AT=[['#cm-wp','wp'],['#cm-wp-anchor','anchor'],['#cm-wp-dmode','dmode'],['#cm-wp-la','la'],['#cm-wp-f','surround'],['#cm-metric','metric'],['#cm-space','space'],['#cm-equal','equal'],['#cm-mag','mag'],['#cm-planck','planck'],
+  ['#cm-3dp h2','fig3d'],['#c3-dot','dot'],['.ctl3 .panel:nth-child(3) h2','partner'],['#cm-tc','tc'],['#cm-td','duv'],
+  ['#cm-synA [data-syn="kind"]','synon'],['#cm-synB [data-syn="kind"]','synon'],['#cm-synA [data-syn="duv"]','synduv'],['#cm-synB [data-syn="duv"]','synduv'],
+  ['#o1-ref','o1ref'],['#o1-metric','o1change'],['#o1-dir','o1order'],['#o1-c1','o1cct'],['#m1-p h2','m1'],['#m1-mode','m1mode'],
+  ['#s-edge','edge'],['#n-cct','cct'],['#l-dmode','dmode'],['#l-la','la'],['#l-f','surround'],['#ld-by','ldby'],['#ld-f-duv','duv'],['#ld-f-ra','cri']];
+function helpInit(){const pop=document.createElement('div');pop.id='help-pop';pop.setAttribute('role','dialog');pop.hidden=true;document.body.appendChild(pop);
+  HELP_AT.forEach(([sel,key])=>document.querySelectorAll(sel).forEach(el=>{if(el.dataset.hq)return;el.dataset.hq=key;const h=HELP[key];if(!h)return;
+    const b=document.createElement('button');b.type='button';b.className='qm';b.textContent='?';b.dataset.help=key;b.title=h.s+' (click for details)';b.setAttribute('aria-label','Help: '+h.t);
+    if(el.matches('h2'))el.appendChild(b);else el.insertAdjacentElement('afterend',b);
+    if(!el.title&&!el.matches('h2,button'))el.title=h.s;}));
+  let cur=null;const close=()=>{pop.hidden=true;if(cur)cur.setAttribute('aria-expanded','false');cur=null;};
+  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.qm');
+    if(!b){if(!e.target.closest('#help-pop'))close();return;}
+    e.preventDefault();e.stopPropagation();if(cur===b){close();return;}close();cur=b;b.setAttribute('aria-expanded','true');const h=HELP[b.dataset.help];
+    pop.innerHTML=`<div class="hp-h"><b>${esc(h.t)}</b><button type="button" class="hp-x" aria-label="Close">×</button></div>`+h.p.map(t=>`<p>${esc(t).replace(/\n/g,'<br>')}</p>`).join('');pop.hidden=false;y0=scrollY;
+    const r=b.getBoundingClientRect(),w=Math.min(360,innerWidth-16);pop.style.width=w+'px';
+    pop.style.left=Math.max(8,Math.min(r.left-8,innerWidth-w-8))+'px';pop.style.maxHeight=Math.max(200,innerHeight-16)+'px';pop.style.top=Math.max(8,Math.min(r.bottom+8,innerHeight-pop.offsetHeight-8))+'px';
+    pop.querySelector('.hp-x').onclick=close;},true);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+  let y0=0;addEventListener('scroll',()=>{if(!pop.hidden&&Math.abs(scrollY-y0)>60)close();},{passive:true});}
+helpInit();
 
 /* ---- boot.js ---- */
 /* Start-up. Runs last, after every module has defined its functions and state. */

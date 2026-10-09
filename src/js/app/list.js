@@ -34,5 +34,5 @@ function renderDetail(){
   <canvas id="sp"></canvas>
   <div class="legend"><span><i style="border-color:var(--muted);border-top-style:solid;opacity:.6"></i>Source</span><span><i style="border-color:var(--fg);border-top-style:dashed"></i>${tk('{curve}')}</span><span><i style="border-color:var(--accent)"></i>Resulting light</span></div>`;
   drawSpec(f);}
-function renderAll(){renderSource();renderList();renderDetail();requestDraw();if(window.labRefresh)labRefresh();if(window.cmpRefresh)cmpRefresh();}
+function renderAll(){renderSource();renderList();renderDetail();requestDraw();if(window.labRefresh)labRefresh();if(window.cmpRefresh)cmpRefresh();if(window.o1Refresh)o1Refresh();if(window.m1Refresh)m1Refresh();}
 

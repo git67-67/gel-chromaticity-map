@@ -47,7 +47,7 @@ The page is a progressive web app: it has a manifest, icons and a service worker
 
 | Device | How to install |
 |---|---|
-| Chrome or Edge on a computer | Click the install icon (a monitor with a down arrow) at the right end of the address bar, or menu → *Install Gel Chromaticity Map* |
+| Chrome or Edge on a computer | Click the install icon (a monitor with a down arrow) at the right end of the address bar, or menu → *Install Spectral Colour Test Lab* |
 | Android (Chrome) | Menu (⋮) → *Install app* or *Add to Home screen* |
 | iPhone / iPad (Safari) | Share button → *Add to Home Screen* |
 

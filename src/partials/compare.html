@@ -1,6 +1,6 @@
 <div id="view-cmp" hidden>
 <div class="lab">
-  <p class="intro tk">Pick light A and light B, ideally with the same CCT and Duv but different colour rendering. Every {filter} is worked out from its real spectrum under both lights. The chart shows how far each one moves when you swap A for B. The two colour vector graphics show, hue by hue, what each light does to saturation and hue.</p>
+  <p class="intro tk">Pick light A and light B, ideally with the same CCT and Duv but different colour rendering. Every {filter} is worked out from its real spectrum under both lights. The chart shows how far each one moves when you swap A for B. The two colour vector graphics show, hue by hue, what each light does to saturation and hue. Two more tabs use the lights chosen here: <b>Lights for a filter</b> and <b>Filter match</b>.</p>
   <div class="ctl3">
     <section class="panel">
       <h2>Light A (from)</h2>
@@ -89,38 +89,6 @@
         <div class="panel"><h2>TM-30 colour vector graphics</h2><canvas id="cm-cvg" class="cvg"></canvas><div class="legend" id="cm-cvgleg"></div>
           <p class="hint">Dots show where each light puts the 16 hue bins relative to its own reference light (the circle). A light that matches the reference sits on the circle. Light A and light B are drawn on top of each other so the differences stand out.</p></div>
         <div class="panel"><h2>Spectra and rendering numbers</h2><canvas id="cm-sp" class="sp"></canvas><div class="legend" id="cm-spleg"></div><div id="cm-tab"></div></div>
-      </div>
-      <div class="panel" id="o1-p">
-        <h2 id="o1-h">One filter, all lights</h2>
-        <p class="hint" style="margin-top:0">The other way round: pick one filter or pigment and see which lights in the library change it the least, or the most. Uses the white-point, brightness and colour-space settings above.</p>
-        <div class="toolrow">
-          <input type="search" id="o1-fq" placeholder="Search filter…" aria-label="Search filter" style="max-width:150px"><select id="o1-f" aria-label="Filter" style="max-width:220px"></select><button class="btn sm" id="o1-use">Use the selected one</button>
-        </div>
-        <div class="toolrow">
-          <label class="chk" for="o1-ref">Compare with <select id="o1-ref"><option value="A">light A (above)</option><option value="own">each light’s own ideal reference</option></select></label>
-          <label class="chk" for="o1-metric">Change in <select id="o1-metric"><option value="apparent">colour and brightness together (ΔE)</option><option value="shift">colour only (Δu′v′)</option><option value="bright">brightness only</option></select></label>
-          <label class="chk" for="o1-dir">Order <select id="o1-dir"><option value="least">smallest change first</option><option value="most">largest change first</option></select></label>
-          <label class="chk">CCT <input type="number" id="o1-c0" placeholder="from K" style="width:92px" aria-label="CCT from"> – <input type="number" id="o1-c1" placeholder="to K" style="width:92px" aria-label="CCT to"></label>
-        </div>
-        <p class="note" id="o1-sum"></p>
-        <canvas id="o1-cv" class="sp" aria-label="Change of the chosen filter against CCT, one dot per light"></canvas>
-        <div class="note" id="o1-sel"></div>
-        <div id="o1-tab" style="max-height:420px;overflow:auto"></div>
-        <div class="row" style="margin-top:8px"><button class="btn sm" id="o1-more" hidden>Show more</button></div>
-        <p class="hint">“Each light’s own ideal reference” compares the filter under every light with the same filter under a perfectly rendering light of the same colour temperature, so the ranking shows which lights show this filter most faithfully. With “light A” the ranking shows which lights are closest to (or furthest from) A. Click a column heading to sort by it, and click a light’s name to open it in the LED library. Colour dots show the colour the filter has under each light (left: reference, right: that light); in the brightness view they are darkened by how much light gets through.</p>
-      </div>
-      <div class="panel" id="m1-p">
-        <h2>Find a filter for a colour</h2>
-        <p class="hint" style="margin-top:0">Pick a filter that gives the colour you want under light A (for example your 2700 K LED), then find the filters that give the closest colour under light B (for example a 6500 K LED). Lights A and B are the ones chosen at the top, library or synthetic with the sliders.</p>
-        <div class="toolrow">
-          <input type="search" id="m1-fq" placeholder="Search filter…" aria-label="Search filter" style="max-width:150px"><select id="m1-f" aria-label="Filter under light A" style="max-width:220px"></select><button class="btn sm" id="m1-use">Use the selected one</button>
-          <label class="chk" for="m1-mode">Match <select id="m1-mode"><option value="colour">colour only (Δu′v′)</option><option value="both">colour and brightness (ΔE)</option></select></label>
-        </div>
-        <div id="m1-sum"></div>
-        <canvas id="m1-cv" class="sp" aria-label="Colours of all filters under light B, around the target colour"></canvas>
-        <div id="m1-tab" style="max-height:420px;overflow:auto"></div>
-        <div class="row" style="margin-top:8px"><button class="btn sm" id="m1-more" hidden>Show more</button></div>
-        <p class="hint">The colour is the colour of the light that leaves the filter, in u′v′, so a match means the two lights look the same side by side. It is not corrected for the eye adapting to a warmer or cooler white. “Light out” is the share of the bare light that gets through, at equal lumens of the two bare lights; a filter that matches in colour can still need more or less light. In the chart the cross is the target, the dashed ring is where the same filter lands under B, and the dots are the filters under B; the ringed dot is the best match.</p>
       </div>
       <div class="panel"><h2 id="cm-pairs-h">Biggest changes between A and B</h2><div class="pairs" id="cm-pairs"></div>
         <p class="hint" id="cm-pairs-hint"></p></div>

@@ -1,0 +1,24 @@
+<div id="view-o1" hidden>
+<div class="lab">
+  <div class="lightsbar" id="o1-lights"></div>
+      <div class="panel" id="o1-p">
+        <h2 id="o1-h">One filter, all lights</h2>
+        <p class="hint" style="margin-top:0">The other way round: pick one filter or pigment and see which lights in the library change it the least, or the most. Uses the lights and settings chosen in LED compare (see the strip above).</p>
+        <div class="toolrow">
+          <input type="search" id="o1-fq" placeholder="Search filter…" aria-label="Search filter" style="max-width:150px"><select id="o1-f" aria-label="Filter" style="max-width:220px"></select><button class="btn sm" id="o1-use">Use the selected one</button>
+        </div>
+        <div class="toolrow">
+          <label class="chk" for="o1-ref">Compare with <select id="o1-ref"><option value="A">light A</option><option value="own">each light’s own ideal reference</option></select></label>
+          <label class="chk" for="o1-metric">Change in <select id="o1-metric"><option value="apparent">colour and brightness together (ΔE)</option><option value="shift">colour only (Δu′v′)</option><option value="bright">brightness only</option></select></label>
+          <label class="chk" for="o1-dir">Order <select id="o1-dir"><option value="least">smallest change first</option><option value="most">largest change first</option></select></label>
+          <label class="chk">CCT <input type="number" id="o1-c0" placeholder="from K" style="width:92px" aria-label="CCT from"> – <input type="number" id="o1-c1" placeholder="to K" style="width:92px" aria-label="CCT to"></label>
+        </div>
+        <p class="note" id="o1-sum"></p>
+        <canvas id="o1-cv" class="sp" aria-label="Change of the chosen filter against CCT, one dot per light"></canvas>
+        <div class="note" id="o1-sel"></div>
+        <div id="o1-tab" style="max-height:420px;overflow:auto"></div>
+        <div class="row" style="margin-top:8px"><button class="btn sm" id="o1-more" hidden>Show more</button></div>
+        <p class="hint">“Each light’s own ideal reference” compares the filter under every light with the same filter under a perfectly rendering light of the same colour temperature, so the ranking shows which lights show this filter most faithfully. With “light A” the ranking shows which lights are closest to (or furthest from) A. Click a column heading to sort by it, and click a light’s name to open it in the LED library. Colour dots show the colour the filter has under each light (left: reference, right: that light); in the brightness view they are darkened by how much light gets through.</p>
+      </div>
+</div>
+</div>

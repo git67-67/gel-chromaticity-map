@@ -1,5 +1,5 @@
 {
-  "name": "Gel Chromaticity Map",
+  "name": "Spectral Colour Test Lab",
   "short_name": "Gel Map",
   "description": "Chromaticity of lighting filters and artist pigments, and a lab for comparing chromatic adaptation transforms.",
   "start_url": "./",

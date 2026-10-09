@@ -2,7 +2,7 @@
    that give the closest colour under light B (for example: a 2700 K LED with a colour filter, and now a 6500 K LED needs the same colour).
    Compared as emitted colour in u'v' (no white-point adaptation), at equal luminous flux of the two bare lights. Lights A and B are
    the ones chosen above, library or synthetic. */
-const m1={f:null,fq:'',mode:'colour',res:[],tgt:null,sel:null,shown:15,raf:0,pts:[]};
+const m1={visible:false,f:null,fq:'',mode:'colour',res:[],tgt:null,sel:null,shown:15,raf:0,pts:[]};
 const m1Pt=(s,s0)=>{const c=chroma(...s),q=cctDuv(c.u,c.v);return{...c,cct:q.cct,duv:q.duv,y:c.y,Y:s[1]/s0[1]};};
 function m1Compute(){m1.res=[];m1.tgt=null;const f=m1.f&&st.filters.get(m1.f),LA=cmLight(cmp.A),LB=cmLight(cmp.B);if(!f||!LA||!LB)return;
   if(!f.T)f.T=resample(f.wl,f.v,st.edge);
@@ -18,8 +18,8 @@ function m1Sync(){const q=m1.fq.toLowerCase().split(/\s+/).filter(Boolean),list=
     sel=$('m1-f'),shown=list.slice(0,300);sel.innerHTML=shown.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('')||'<option value="">No match</option>';
   const f=m1.f&&st.filters.get(m1.f);if(f&&shown.includes(f))sel.value=f.id;else if(shown.length){m1.f=shown[0].id;sel.value=m1.f;}
   $('m1-mode').value=m1.mode;}
-function m1Render(){const el=$('m1-sum'),tab=$('m1-tab'),G=m1.tgt;$('m1-more').hidden=true;
-  if(!G){el.textContent=cmLight(cmp.A)&&cmLight(cmp.B)?'This filter lets no light through under light A.':'Pick lights A and B above.';tab.innerHTML='';m1Plot();return;}
+function m1Render(){lbRender('m1-lights',true);const el=$('m1-sum'),tab=$('m1-tab'),G=m1.tgt;$('m1-more').hidden=true;
+  if(!G){el.textContent=cmLight(cmp.A)&&cmLight(cmp.B)?'This filter lets no light through under light A.':'Pick lights A and B in LED compare.';tab.innerHTML='';m1Plot();return;}
   const R=m1.res,f=G.f,top=R[0];
   el.innerHTML=`<div class="readout" style="grid-template-columns:1fr"><div class="kv"><span>${esc(f.name)} under A (${esc(G.LA.name)})</span><b>${m1Fmt(G.T)}</b></div>`+
     `<div class="kv"><span>the same under B (${esc(G.LB.name)})</span><b>${m1Fmt(G.same)}</b></div>`+
@@ -39,7 +39,7 @@ function m1Plot(){const cv=$('m1-cv');if(!cv)return;if(!cols.fg)readCols();const
     c.fillStyle=cmpColor(r.C);c.strokeStyle=sel||top?cols.fg:cols.muted;c.lineWidth=sel||top?2:.8;c.beginPath();c.arc(x,y,sel?5.5:top?5:3.2,0,7);c.fill();c.stroke();m1.pts.push({x,y,id:r.g.id});}
   if(G.same){const x=X(G.same.up),y=Y(G.same.vp);c.strokeStyle=cols.fg;c.setLineDash([3,3]);c.lineWidth=1.4;c.beginPath();c.arc(x,y,6,0,7);c.stroke();c.setLineDash([]);c.fillStyle=cols.fg;c.textAlign='left';c.textBaseline='bottom';c.fillText('same filter under B',x+8,y-4);}
   c.strokeStyle=lc.k[0];c.lineWidth=2.2;c.beginPath();c.moveTo(cx-8,cy);c.lineTo(cx+8,cy);c.moveTo(cx,cy-8);c.lineTo(cx,cy+8);c.stroke();c.fillStyle=lc.k[0];c.font='bold 11px '+FM;c.textAlign='left';c.textBaseline='bottom';c.fillText('target',cx+10,cy-6);}
-function m1Update(){if(!cmp.visible||!$('m1-p'))return;if(m1.raf)return;m1.raf=requestAnimationFrame(()=>{m1.raf=0;
+function m1Update(){if(!m1.visible||!$('m1-p'))return;if(m1.raf)return;m1.raf=requestAnimationFrame(()=>{m1.raf=0;if(!cmp.B&&cmp.A)cmp.B='ref:'+cmp.A;
   if(!m1.f||!st.filters.has(m1.f))m1.f=(o1.f&&st.filters.has(o1.f)?o1.f:null)||(cmp.sel&&st.filters.has(cmp.sel)?cmp.sel:[...st.filters.keys()][0])||null;
   m1Sync();m1Compute();m1.shown=Math.max(15,Math.min(m1.shown,m1.res.length));m1Render();});}
 function m1Redo(reset){if(reset)m1.shown=15;m1Compute();m1Render();}
@@ -53,3 +53,7 @@ function m1Redo(reset){if(reset)m1.shown=15;m1Compute();m1Render();}
   const cv=g('m1-cv');cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*cv.clientWidth/r.width,y=(e.clientY-r.top)*cv.clientHeight/r.height;
     let b=null,bd=144;for(const q of m1.pts){const d=(q.x-x)**2+(q.y-y)**2;if(d<bd){bd=d;b=q;}}if(b){m1.sel=b.id;const i=m1.res.findIndex(z=>z.g.id===b.id);if(i>=m1.shown)m1.shown=i+1;m1Render();}});
 })();
+
+window.m1Refresh=()=>{if(m1.visible)m1Update();};LED.listeners.push(()=>{if(m1.visible)m1Update();});
+function m1Theme(){if(m1.visible)m1Update();}matchMedia('(prefers-color-scheme: dark)').addEventListener('change',m1Theme);new MutationObserver(m1Theme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+new ResizeObserver(()=>{if(m1.visible)m1Plot();}).observe($('m1-p'));

@@ -1,6 +1,6 @@
 <header>
-  <h1>Gel Chromaticity Map</h1>
-  <p class="tk">{built} are built in. Pick a light source and see where every {filter} lands on the CIE diagram. The position is the source spectrum multiplied by {mult}, recalculated whenever the source changes.</p>
+  <h1>Spectral Colour Test Lab</h1>
+  <p class="tk">Where {filters} land on the CIE diagram under any light source, how LEDs render colour, and which {filter} gives a wanted colour under another light. {built} are built in; pick a tool below.</p>
 </header>
 <div class="navrow">
 <nav class="tabs" role="tablist" aria-label="Tools">
@@ -8,6 +8,8 @@
   <button role="tab" id="t-lab" aria-selected="false">Adaptation lab</button>
   <button role="tab" id="t-leds" aria-selected="false">LED library</button>
   <button role="tab" id="t-cmp" aria-selected="false">LED compare</button>
+  <button role="tab" id="t-o1" aria-selected="false">Lights for a filter</button>
+  <button role="tab" id="t-m1" aria-selected="false">Filter match</button>
 </nav>
 <div class="seg" id="dsseg" role="group" aria-label="Data set"></div>
 </div>

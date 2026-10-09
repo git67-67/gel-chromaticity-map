@@ -1,0 +1,18 @@
+<div id="view-m1" hidden>
+<div class="lab">
+  <div class="lightsbar" id="m1-lights"></div>
+      <div class="panel" id="m1-p">
+        <h2>Find a filter for a colour</h2>
+        <p class="hint" style="margin-top:0">Pick a filter that gives the colour you want under light A (for example your 2700 K LED), then find the filters that give the closest colour under light B (for example a 6500 K LED). Lights A and B are the ones chosen in LED compare (library lights, or synthetic ones with sliders).</p>
+        <div class="toolrow">
+          <input type="search" id="m1-fq" placeholder="Search filter…" aria-label="Search filter" style="max-width:150px"><select id="m1-f" aria-label="Filter under light A" style="max-width:220px"></select><button class="btn sm" id="m1-use">Use the selected one</button>
+          <label class="chk" for="m1-mode">Match <select id="m1-mode"><option value="colour">colour only (Δu′v′)</option><option value="both">colour and brightness (ΔE)</option></select></label>
+        </div>
+        <div id="m1-sum"></div>
+        <canvas id="m1-cv" class="sp" aria-label="Colours of all filters under light B, around the target colour"></canvas>
+        <div id="m1-tab" style="max-height:420px;overflow:auto"></div>
+        <div class="row" style="margin-top:8px"><button class="btn sm" id="m1-more" hidden>Show more</button></div>
+        <p class="hint">The colour is the colour of the light that leaves the filter, in u′v′, so a match means the two lights look the same side by side. It is not corrected for the eye adapting to a warmer or cooler white. “Light out” is the share of the bare light that gets through, at equal lumens of the two bare lights; a filter that matches in colour can still need more or less light. In the chart the cross is the target, the dashed ring is where the same filter lands under B, and the dots are the filters under B; the ringed dot is the best match.</p>
+      </div>
+</div>
+</div>
