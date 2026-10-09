@@ -32,6 +32,18 @@ With D = 1 this is the plain von Kries scaling. With D < 1, adaptation is incomp
 
 **Truth** for the lab is the spectral XYZ of S_B·T divided by the Y of white B (S_B alone). **Prediction** is the CAT applied to the spectral XYZ under A, with both sides normalised to white Y = 1. **Error** is the Euclidean distance in the (u′, v′) plane. "No CAT" is the distance between the colour under A and the truth under B, i.e. the colour shift if nothing adapts.
 
+## Brightness and energy in LED compare and the Colour map
+
+For a light with spectrum S(λ) and an item with transmission or reflectance T(λ) on the 380–780 nm grid:
+- **Light out** (luminance factor) y = Σ S·T·ȳ / Σ S·ȳ. This is what the Colour map calls Light out or Reflectance.
+- **Energy passed** e = Σ S·T / Σ S, **energy absorbed** 1 − e.
+- **Brightness change A → B at equal luminous flux**: both bare lights give the same lumens, so the filtered luminance is proportional to y, and ratio = y_B / y_A; change = ratio − 1; stops = log₂(ratio).
+- **At equal radiant power**: ratio = (y_B · r) / y_A with r = (Σ S_B·ȳ / Σ S_B) / (Σ S_A·ȳ / Σ S_A), the ratio of the lights' luminous efficacy of radiation.
+- ΔL\* = L\*(y_B·r) − L\*(y_A), with L\* = 116·∛y − 16 and a white of y = 1.
+- Absorbed-energy difference = (1 − e_B) − (1 − e_A) = e_A − e_B, in percentage points.
+
+Tests check a flat 50 % filter (50 % light, 50 % energy, no brightness change at equal flux, change by r at equal power).
+
 ## White-point treatment in LED compare
 
 Light A has white W_A, light B has white W_B (XYZ scaled to Y = 1). A colour under B is mapped as if the eye had adapted from W_B to W_A, then compared with the same colour under A (or the reverse with "Move" set to A's colours).

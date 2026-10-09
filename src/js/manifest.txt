@@ -18,6 +18,7 @@ core/quality.js
 # --- metrics plug-ins (registry first, then one file per metric) ---
 metrics/registry.js
 metrics/peak-wavelength.js
+metrics/energy.js
 metrics/colour-rendering.js
 
 # --- LED library: parsing, store, chooser (used by every tab) ---

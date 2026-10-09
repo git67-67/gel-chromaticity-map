@@ -61,6 +61,10 @@
           </details>
         </div>
         <div class="toolrow">
+          <label class="chk" for="cm-metric">Show <select id="cm-metric"><option value="shift">Colour shift (dots in the colour under B)</option><option value="bright">Brightness change (dots blue = darker, orange = brighter)</option><option value="energy">Absorbed energy (dots blue = B absorbs less)</option></select></label>
+          <label class="chk" for="cm-equal">Compare brightness at <select id="cm-equal"><option value="lumen">equal luminous flux (same lumens)</option><option value="power">equal radiant power (same watts)</option></select></label>
+        </div>
+        <div class="toolrow">
           <button class="btn sm" id="cm-frame">Frame the colours</button><button class="btn sm" id="cm-whole">Whole diagram</button>
           <label class="chk"><input type="checkbox" id="cm-planck" checked> Planckian locus</label>
         </div>
@@ -70,14 +74,15 @@
         <div class="zoom"><button id="cm-zin" aria-label="Zoom in">+</button><button id="cm-zout" aria-label="Zoom out">−</button><button id="cm-zfit" aria-label="Whole diagram" title="Whole diagram">⤢</button></div>
         <div class="tip" id="cm-tip" hidden></div>
       </div>
+      <div class="legend mleg" id="cm-mleg" hidden></div>
       <div class="note tk" id="cm-note"></div>
       <div class="two">
         <div class="panel"><h2>TM-30 colour vector graphics</h2><canvas id="cm-cvg" class="cvg"></canvas><div class="legend" id="cm-cvgleg"></div>
           <p class="hint">Dots show where each light puts the 16 hue bins relative to its own reference light (the circle). A light that matches the reference sits on the circle. Light A and light B are drawn on top of each other so the differences stand out.</p></div>
         <div class="panel"><h2>Spectra and rendering numbers</h2><canvas id="cm-sp" class="sp"></canvas><div class="legend" id="cm-spleg"></div><div id="cm-tab"></div></div>
       </div>
-      <div class="panel"><h2 class="tk">Biggest changes between A and B</h2><div class="pairs" id="cm-pairs"></div>
-        <p class="hint tk">Each tile shows the colour of the light that {leaves} under A (left) and B (right). Colours are drawn at equal brightness from the chromaticity only, so they show the hue and saturation change, not brightness.</p></div>
+      <div class="panel"><h2 id="cm-pairs-h">Biggest changes between A and B</h2><div class="pairs" id="cm-pairs"></div>
+        <p class="hint" id="cm-pairs-hint"></p></div>
     </section>
     <aside class="side">
       <section class="panel" id="cm-detail"></section>
@@ -85,7 +90,7 @@
         <h2><span class="tk">{Filters}</span> <span id="cm-count" style="font-weight:400"></span></h2>
         <div class="listhead">
           <input type="search" id="cm-q" placeholder="Search name or number" aria-label="Search" data-tk-ph="{search}">
-          <select id="cm-sort" aria-label="Sort"><option value="shift">Sort: largest shift</option><option value="small">Sort: smallest shift</option><option value="code" class="tk">{sortNum}</option></select>
+          <select id="cm-sort" aria-label="Sort"><option value="shift">Sort: largest colour shift</option><option value="small">Sort: smallest colour shift</option><option value="bigb">Sort: largest brightness change</option><option value="brup">Sort: brighter under B first</option><option value="brdn">Sort: darker under B first</option><option value="bige">Sort: largest absorbed-energy change</option><option value="code" class="tk">{sortNum}</option></select>
         </div>
         <div class="list" id="cm-list"></div>
       </section>

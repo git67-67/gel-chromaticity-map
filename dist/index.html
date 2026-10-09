@@ -232,6 +232,10 @@ html[data-nocode] .item .nm{color:var(--fg)}
 @media(max-width:600px){.wpgrid{grid-template-columns:1fr}}
 .wpbox{flex:1 1 100%;min-width:0;box-sizing:border-box;max-width:100%}.wpbox *{min-width:0}
 .wpbox .field{flex-direction:row;align-items:center;gap:6px 10px}.wpbox .field label{white-space:nowrap}.wpbox .field select{flex:1 1 220px;width:auto;height:auto}
+
+.mleg{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:12px;color:var(--muted);margin-top:6px}.mleg .grad{display:inline-block;width:140px;height:10px;border-radius:5px;border:1px solid var(--line)}.mleg .rg{font-family:var(--mono);font-size:11px}
+.stage .toolrow label.chk{flex-wrap:wrap;max-width:100%}.stage .toolrow label.chk select{max-width:100%;min-width:0}
+@media(max-width:600px){.stage .toolrow label.chk{flex:1 1 100%}.stage .toolrow label.chk select{flex:1 1 100%;width:100%}}
 </style>
 </head>
 <body>
@@ -599,6 +603,10 @@ html[data-nocode] .item .nm{color:var(--fg)}
           </details>
         </div>
         <div class="toolrow">
+          <label class="chk" for="cm-metric">Show <select id="cm-metric"><option value="shift">Colour shift (dots in the colour under B)</option><option value="bright">Brightness change (dots blue = darker, orange = brighter)</option><option value="energy">Absorbed energy (dots blue = B absorbs less)</option></select></label>
+          <label class="chk" for="cm-equal">Compare brightness at <select id="cm-equal"><option value="lumen">equal luminous flux (same lumens)</option><option value="power">equal radiant power (same watts)</option></select></label>
+        </div>
+        <div class="toolrow">
           <button class="btn sm" id="cm-frame">Frame the colours</button><button class="btn sm" id="cm-whole">Whole diagram</button>
           <label class="chk"><input type="checkbox" id="cm-planck" checked> Planckian locus</label>
         </div>
@@ -608,14 +616,15 @@ html[data-nocode] .item .nm{color:var(--fg)}
         <div class="zoom"><button id="cm-zin" aria-label="Zoom in">+</button><button id="cm-zout" aria-label="Zoom out">−</button><button id="cm-zfit" aria-label="Whole diagram" title="Whole diagram">⤢</button></div>
         <div class="tip" id="cm-tip" hidden></div>
       </div>
+      <div class="legend mleg" id="cm-mleg" hidden></div>
       <div class="note tk" id="cm-note"></div>
       <div class="two">
         <div class="panel"><h2>TM-30 colour vector graphics</h2><canvas id="cm-cvg" class="cvg"></canvas><div class="legend" id="cm-cvgleg"></div>
           <p class="hint">Dots show where each light puts the 16 hue bins relative to its own reference light (the circle). A light that matches the reference sits on the circle. Light A and light B are drawn on top of each other so the differences stand out.</p></div>
         <div class="panel"><h2>Spectra and rendering numbers</h2><canvas id="cm-sp" class="sp"></canvas><div class="legend" id="cm-spleg"></div><div id="cm-tab"></div></div>
       </div>
-      <div class="panel"><h2 class="tk">Biggest changes between A and B</h2><div class="pairs" id="cm-pairs"></div>
-        <p class="hint tk">Each tile shows the colour of the light that {leaves} under A (left) and B (right). Colours are drawn at equal brightness from the chromaticity only, so they show the hue and saturation change, not brightness.</p></div>
+      <div class="panel"><h2 id="cm-pairs-h">Biggest changes between A and B</h2><div class="pairs" id="cm-pairs"></div>
+        <p class="hint" id="cm-pairs-hint"></p></div>
     </section>
     <aside class="side">
       <section class="panel" id="cm-detail"></section>
@@ -623,7 +632,7 @@ html[data-nocode] .item .nm{color:var(--fg)}
         <h2><span class="tk">{Filters}</span> <span id="cm-count" style="font-weight:400"></span></h2>
         <div class="listhead">
           <input type="search" id="cm-q" placeholder="Search name or number" aria-label="Search" data-tk-ph="{search}">
-          <select id="cm-sort" aria-label="Sort"><option value="shift">Sort: largest shift</option><option value="small">Sort: smallest shift</option><option value="code" class="tk">{sortNum}</option></select>
+          <select id="cm-sort" aria-label="Sort"><option value="shift">Sort: largest colour shift</option><option value="small">Sort: smallest colour shift</option><option value="bigb">Sort: largest brightness change</option><option value="brup">Sort: brighter under B first</option><option value="brdn">Sort: darker under B first</option><option value="bige">Sort: largest absorbed-energy change</option><option value="code" class="tk">{sortNum}</option></select>
         </div>
         <div class="list" id="cm-list"></div>
       </section>
@@ -861,6 +870,16 @@ function renderMetricSort(){
 registerMetric({id:'peak',title:'Output peak',
   columns:[{key:'peakNm',label:'Peak',digits:0,unit:' nm',sortable:true}],
   compute({out}){let b=0;for(let i=1;i<N;i++)if(out[i]>out[b])b=i;return{peakNm:WLS[b]};}});
+
+/* ---- metrics/energy.js ---- */
+/* Radiant energy that gets through (filters) or comes back (pigments), and the rest, which is absorbed.
+   Energy is the plain sum of the spectral power over 380-780 nm: out / source. This is not the brightness the eye sees
+   (that is the "Light out" / "Reflectance" figure, weighted by the eye's sensitivity). Light outside 380-780 nm (UV, infra-red)
+   is not in the data and is ignored. Frost and diffusion filters also scatter light, which this counts as passed only if the
+   transmission curve says so. */
+registerMetric({id:'energy',title:'Energy',
+  columns:[{key:'energyOut',label:'Energy passed',digits:1,unit:' %',sortable:true},{key:'energyAbs',label:'Energy absorbed',digits:1,unit:' %',sortable:true}],
+  compute({spd,out}){let a=0,b=0;for(let i=0;i<N;i++){a+=spd[i];b+=out[i];}const e=a>0?100*b/a:NaN;return{energyOut:e,energyAbs:100-e};}});
 
 /* ---- metrics/colour-rendering.js ---- */
 /* Colour rendering of the light that reaches the eye: CRI (Ra, R9) and TM-30 (Rf, Rg). For a filter this describes the
@@ -2152,7 +2171,7 @@ new MutationObserver(ldTheme).observe(document.documentElement,{attributes:true,
 /* ---- led/compare.js ---- */
 /* LED compare tab: how every filter / pigment moves when light A is swapped for light B, plus what each light does to hue and
    saturation (TM-30 colour vector graphic). A and B are library ids; 'ref:' + id is the ideal reference light of that LED. */
-const cmp={A:'std:LED-B3',B:'',mode:'uv',mag:1,wp:{mode:'none',cat:'bfd',anchor:'A',dmode:'full',dman:1,LA:64,F:1},planck:true,sel:null,q:'',sort:'shift',visible:false,dirty:true,find:false,res:null,view:null,tolC:150,tolD:0.003,candSort:'rf',candA:'',cands:[]};
+const cmp={A:'std:LED-B3',B:'',mode:'uv',mag:1,metric:'shift',equal:'lumen',wp:{mode:'none',cat:'bfd',anchor:'A',dmode:'full',dman:1,LA:64,F:1},planck:true,sel:null,q:'',sort:'shift',visible:false,dirty:true,find:false,res:null,view:null,tolC:150,tolD:0.003,candSort:'rf',candA:'',cands:[]};
 const cmQ={}; // quality cache for reference lights
 function cmLight(id){ // -> {id,name,spd,q} or null
   if(!id)return null;
@@ -2179,12 +2198,19 @@ function cmpAdapter(wp,Ws,Wd){
   const C=CATS.find(x=>x.id===(wp.mode==='tm30'?'cat02':wp.cat))||CATS[0],D=wp.mode==='tm30'?1:degreeD(wp.dmode,wp.dman,wp.LA,wp.F),Mi=inv3(C.M),g=catGains(C.M,Ws.xyz,Wd.xyz,D);
   return xyz=>{const p=ptOf(catApply(C.M,Mi,g,xyz));return p?{up:p.u,vp:p.v}:null;};}
 function cmpWpName(wp){return wp.mode==='none'?'no white-point correction':wp.mode==='shift'?'plain u′v′ shift':wp.mode==='cri'?'CRI von Kries (CIE 1960 u,v)':wp.mode==='tm30'?'TM-30 / CIECAM02 (CAT02, D = 1)':(CATS.find(x=>x.id===wp.cat)||CATS[0]).name+(wp.dmode==='full'?', D = 1':wp.dmode==='manual'?', D = '+(+wp.dman).toFixed(2):', D from viewing conditions');}
+const cmSum=(spd,T)=>{let s=0;if(T)for(let i=0;i<N;i++)s+=spd[i]*T[i];else for(let i=0;i<N;i++)s+=spd[i];return s;};
+const cmL=y=>y>0?116*Math.cbrt(y)-16:0;   // CIE L* of a relative luminance (white = 1)
 const cmpPt=(up,vp)=>{const dd=6*up-16*vp+12;return{up,vp,x:9*up/dd,y:4*vp/dd,u:up,v:vp*2/3};};
 
 /* ---- calculation ---- */
+const cmMean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:NaN,cmMedian=a=>{a=[...a].sort((x,y)=>x-y);return a.length?a[Math.floor((a.length-1)/2)]:NaN;};
 function cmpCompute(){const LA=cmLight(cmp.A),LB=cmLight(cmp.B);if(!LA||!LB){cmp.res=null;return;}
   const sa=sums(LA.spd),sb=sums(LB.spd),wA=chroma(...sa),wB=chroma(...sb),rows=[],byId=new Map(),wp=cmp.wp;
   const nW=(s,w)=>({xyz:[s[0]/s[1],1,s[2]/s[1]],up:w.up,vp:w.vp});
+  const totA=cmSum(LA.spd),totB=cmSum(LB.spd);
+  /* brightness basis: equal luminous flux (both bare lights give the same lumens, so brightness under B / under A = yB / yA),
+     or equal radiant power (then the lights' own luminous efficacy enters as the factor rate) */
+  const rate=cmp.equal==='power'?(sb[1]/totB)/(sa[1]/totA):1;
   const fromA=wp.anchor==='B';   // anchor 'A': B's colours are moved to A's white. anchor 'B': A's colours are moved to B's white.
   const adapt=cmpAdapter(wp,fromA?nW(sa,wA):nW(sb,wB),fromA?nW(sb,wB):nW(sa,wA));
   for(const f of st.filters.values()){if(!f.T)f.T=resample(f.wl,f.v,st.edge);
@@ -2192,14 +2218,30 @@ function cmpCompute(){const LA=cmLight(cmp.A),LB=cmLight(cmp.B);if(!LA||!LB){cmp
     let A=chroma(...ta),B=chroma(...tb);
     if(adapt){const m=fromA?adapt([ta[0]/sa[1],ta[1]/sa[1],ta[2]/sa[1]],A):adapt([tb[0]/sb[1],tb[1]/sb[1],tb[2]/sb[1]],B);if(!m)continue;
       if(fromA)A=cmpPt(m.up,m.vp);else B=cmpPt(m.up,m.vp);}
-    const row={f,A,B,shift:Math.hypot(B.up-A.up,B.vp-A.vp),yA:ta[1]/sa[1],yB:tb[1]/sb[1]};rows.push(row);byId.set(f.id,row);}
+    const yA=ta[1]/sa[1],yB=tb[1]/sb[1],eA=cmSum(LA.spd,f.T)/totA,eB=cmSum(LB.spd,f.T)/totB,ratio=yB*rate/yA;
+    const row={f,A,B,shift:Math.hypot(B.up-A.up,B.vp-A.vp),yA,yB,eA,eB,bright:ratio-1,stops:Math.log2(ratio),dL:cmL(yB*rate)-cmL(yA),dE:eA-eB};rows.push(row);byId.set(f.id,row);}
   const s=rows.map(r=>r.shift).sort((a,b)=>a-b),pct=p=>s.length?s[Math.min(s.length-1,Math.floor(p*(s.length-1)))]:NaN;
-  cmp.res={LA,LB,wA,wB,rows,byId,stats:{mean:s.length?s.reduce((a,b)=>a+b,0)/s.length:NaN,median:pct(.5),p90:pct(.9),max:s.length?s[s.length-1]:NaN,n:s.length},
+  cmp.res={LA,LB,wA,wB,rate,rows,byId,stats:{mean:s.length?s.reduce((a,b)=>a+b,0)/s.length:NaN,median:pct(.5),p90:pct(.9),max:s.length?s[s.length-1]:NaN,n:s.length,bMean:cmMean(rows.map(r=>r.bright)),bMed:cmMedian(rows.map(r=>r.bright)),eMean:cmMean(rows.map(r=>r.dE))},
     wShift:Math.hypot(wB.up-wA.up,wB.vp-wA.vp)};}
+/* what the chart, the tiles and the list show: colour shift, brightness change or change in absorbed energy */
+const cmSigned=r=>cmp.metric==='bright'?r.stops:cmp.metric==='energy'?r.dE:null;   // signed value for the diverging colour scale
+const cmMag=r=>cmp.metric==='bright'?Math.abs(r.stops):cmp.metric==='energy'?Math.abs(r.dE):r.shift;
+const cmWord=(v,d,u,up,dn)=>Math.abs(v)<Math.pow(10,-d)/2?'no change':Math.abs(v).toFixed(d)+u+' '+(v>0?up:dn);
+const sgn=(v,d,u)=>(v>0.00049?'+':v<-0.00049?'−':'')+Math.abs(v).toFixed(d)+u;
+function cmMetricStr(r){return cmp.metric==='bright'?sgn(r.bright*100,0,' %'):cmp.metric==='energy'?sgn(r.dE*100,1,' pp'):(r.shift*1000).toFixed(1);}
+function cmRange(){const R=cmp.res;if(!R||!R.rows.length)return 1;const a=R.rows.map(r=>Math.abs(cmSigned(r)||0)).sort((x,y)=>x-y);
+  return Math.max(a[Math.min(a.length-1,Math.floor(.95*(a.length-1)))],cmp.metric==='bright'?.1:.01);}
+function cmDiv(t){t=Math.max(-1,Math.min(1,t));const a=Math.abs(t),dark=typeof isDarkTheme==='function'&&isDarkTheme(),L=dark?22+38*a:93-48*a;
+  return t<0?`hsl(212,${30+55*a}%,${L}%)`:`hsl(28,${30+65*a}%,${L}%)`;}
+/* tile colour: in brightness mode the colour is darkened by how much light gets through (relative to the most transmissive item) */
+function cmpColorY(p,y,ymax){const c=rgbOfXY(p.x,p.y),k=Math.pow(Math.max(0,Math.min(1,y/ymax)),1/2.2);return'rgb('+(c[0]*k|0)+','+(c[1]*k|0)+','+(c[2]*k|0)+')';}
+function cmTile(r,which){if(cmp.metric!=='bright')return cmpColor(which==='A'?r.A:r.B);
+  const ym=cmp.res.rows.reduce((m,x)=>Math.max(m,x.yA,x.yB*(cmp.equal==='power'?cmp.res.rate:1)),1e-9);
+  return cmpColorY(which==='A'?r.A:r.B,which==='A'?r.yA:r.yB*(cmp.equal==='power'?cmp.res.rate:1),ym);}
 function cmpColor(p){const c=rgbOfXY(p.x,p.y);return'rgb('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+')';}
 
 /* ---- chart ---- */
-function cmDraw(v){const R=cmp.res;if(!R)return;const ctx=v.ctx,k=cmp.mag,ss=cmp.sel&&R.byId.get(cmp.sel);
+function cmDraw(v){const R=cmp.res;if(!R)return;const ctx=v.ctx,k=cmp.mag,ss=cmp.sel&&R.byId.get(cmp.sel),rng=cmRange();
   const pt=p=>v.px(...v.crdLoc(p)),mix=(A,B)=>({up:A.up+(B.up-A.up)*k,vp:A.vp+(B.vp-A.vp)*k});
   const crdOf=p=>v.mode==='xy'?(()=>{const d=6*p.up-16*p.vp+12;return[9*p.up/d,4*p.vp/d];})():[p.up,p.vp],px2=p=>{const c=crdOf(p);return v.px(c[0],c[1]);};
   // whiskers
@@ -2207,7 +2249,7 @@ function cmDraw(v){const R=cmp.res;if(!R)return;const ctx=v.ctx,k=cmp.mag,ss=cmp
   ctx.globalAlpha=1;
   for(const r of R.rows){const a=pt(r.A),b=px2(mix(r.A,r.B));
     ctx.strokeStyle=cols.fg;ctx.globalAlpha=.55;ctx.lineWidth=1;ctx.beginPath();ctx.arc(a[0],a[1],2.4,0,7);ctx.stroke();ctx.globalAlpha=1;
-    ctx.fillStyle=cmpColor(r.B);ctx.strokeStyle=cols.plotbg;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(b[0],b[1],3.6,0,7);ctx.fill();ctx.stroke();v.hits.push({x:b[0],y:b[1],r:3.6,id:r.f.id});}
+    ctx.fillStyle=cmp.metric==='shift'?cmpColor(r.B):cmDiv(cmSigned(r)/rng);ctx.strokeStyle=cols.plotbg;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(b[0],b[1],3.6,0,7);ctx.fill();ctx.stroke();v.hits.push({x:b[0],y:b[1],r:3.6,id:r.f.id});}
   if(ss){const a=pt(ss.A),b=px2(mix(ss.A,ss.B));ctx.strokeStyle=cols.fg;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();
     ctx.fillStyle=cmpColor(ss.A);ctx.beginPath();ctx.arc(a[0],a[1],5,0,7);ctx.fill();ctx.stroke();
     ctx.fillStyle=cmpColor(ss.B);ctx.beginPath();ctx.arc(b[0],b[1],6,0,7);ctx.fill();ctx.stroke();}
@@ -2215,7 +2257,7 @@ function cmDraw(v){const R=cmp.res;if(!R)return;const ctx=v.ctx,k=cmp.mag,ss=cmp
   for(const [w,l,c] of [[R.wA,'A',lc.k[0]],[R.wB,'B',lc.k[1]]]){const p=pt(w);ctx.strokeStyle=c;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(p[0]-6,p[1]);ctx.lineTo(p[0]+6,p[1]);ctx.moveTo(p[0],p[1]-6);ctx.lineTo(p[0],p[1]+6);ctx.stroke();
     ctx.fillStyle=c;ctx.font='bold 11px '+FM;ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillText('white '+l,p[0]+8,p[1]-4);}}
 function cmTip(h,p){const tip=$('cm-tip'),R=cmp.res;if(!h||!R){tip.hidden=true;return;}const r=R.byId.get(h.id);if(!r){tip.hidden=true;return;}
-  tip.innerHTML=`<b>${esc(r.f.name)}</b><span>shift Δu′v′ ${f4(r.shift)}</span><span>Y under A ${(r.yA*100).toFixed(1)} % · under B ${(r.yB*100).toFixed(1)} %</span>`;
+  tip.innerHTML=`<b>${esc(r.f.name)}</b><span>shift Δu′v′ ${f4(r.shift)}</span><span>light out A ${(r.yA*100).toFixed(1)} % · B ${(r.yB*100).toFixed(1)} %</span><span>brightness ${sgn(r.bright*100,1,' %')} (${sgn(r.stops,2,' stops')})</span><span>energy absorbed A ${((1-r.eA)*100).toFixed(1)} % · B ${((1-r.eB)*100).toFixed(1)} %</span>`;
   tip.hidden=false;const W=cmp.view.W,r0=cmp.view.cv.getBoundingClientRect(),sx=r0.width/W;
   tip.style.left=Math.min(p[0]*sx+12,r0.width-tip.offsetWidth-6)+'px';tip.style.top=Math.max(4,Math.min(p[1]*sx+12,r0.height-tip.offsetHeight-6))+'px';}
 cmp.view=new CView($('cm-cv'),$('cm-plot'),{onDraw:cmDraw,onHover:cmTip,onClick:h=>cmSelect(h.id),planck:()=>cmp.planck});
@@ -2243,11 +2285,12 @@ $('cm-ts').onchange=e=>{cmp.candSort=e.target.value;cmCands();};
 
 /* ---- lists and detail ---- */
 const cmMatch=f=>{if(!cmp.q)return true;const n=(f.code+' '+f.name).toLowerCase();return cmp.q.toLowerCase().split(/\s+/).every(t=>n.includes(t));};
-function cmRows(){const R=cmp.res;if(!R)return[];const a=R.rows.filter(r=>cmMatch(r.f));
-  if(cmp.sort==='shift')a.sort((x,y)=>y.shift-x.shift);else if(cmp.sort==='small')a.sort((x,y)=>x.shift-y.shift);else a.sort((x,y)=>natCmp(x.f,y.f));return a;}
+function cmRows(){const R=cmp.res;if(!R)return[];const a=R.rows.filter(r=>cmMatch(r.f)),S=cmp.sort;
+  const by={shift:(x,y)=>y.shift-x.shift,small:(x,y)=>x.shift-y.shift,bigb:(x,y)=>Math.abs(y.stops)-Math.abs(x.stops),brup:(x,y)=>y.stops-x.stops,brdn:(x,y)=>x.stops-y.stops,bige:(x,y)=>Math.abs(y.dE)-Math.abs(x.dE)};
+  a.sort(by[S]||((x,y)=>natCmp(x.f,y.f)));return a;}
 function cmRenderList(){const R=cmp.res,rows=cmRows();$('cm-count').textContent=R?`(${rows.length}${rows.length!==R.rows.length?' of '+R.rows.length:''})`:'';
   $('cm-list').innerHTML=rows.length?rows.slice(0,400).map(r=>{const f=r.f,rest=f.name.startsWith(f.code)?f.name.slice(f.code.length).trim():f.name;
-    return`<button class="item" data-id="${esc(f.id)}" aria-current="${f.id===cmp.sel}"><span class="sw" style="background:${cmpColor(r.A)}"></span><span class="code">${esc(f.code)}</span><span class="nm" title="${esc(f.name)}">${esc(rest)}</span><span class="num">${(r.shift*1000).toFixed(1)}</span><span class="num"><i class="dsw" style="background:${cmpColor(r.B)};margin:0"></i></span></button>`;}).join('')+(rows.length>400?'<div class="hint" style="padding:6px">Showing 400; search to narrow.</div>':'')
+    return`<button class="item" data-id="${esc(f.id)}" aria-current="${f.id===cmp.sel}"><span class="sw" style="background:${cmTile(r,'A')}"></span><span class="code">${esc(f.code)}</span><span class="nm" title="${esc(f.name)}">${esc(rest)}</span><span class="num">${cmMetricStr(r)}</span><span class="num"><i class="dsw" style="background:${cmTile(r,'B')};margin:0"></i></span></button>`;}).join('')+(rows.length>400?'<div class="hint" style="padding:6px">Showing 400; search to narrow.</div>':'')
     :'<div class="empty">'+(R?tk('No {filters} match.'):'Pick two lights.')+'</div>';}
 $('cm-list').addEventListener('click',e=>{const b=e.target.closest('.item');if(b)cmSelect(b.dataset.id);});
 $('cm-q').oninput=e=>{cmp.q=e.target.value.trim();cmRenderList();};$('cm-sort').onchange=e=>{cmp.sort=e.target.value;cmRenderList();};
@@ -2256,18 +2299,23 @@ function cmSelect(id){cmp.sel=id;cmRenderList();cmRenderDetail();cmp.view.reques
 function cmRenderDetail(){const R=cmp.res,r=R&&cmp.sel&&R.byId.get(cmp.sel),el=$('cm-detail');
   if(!r){el.innerHTML='<h2>'+tk('Selected {filter}')+'</h2><div class="empty">'+tk('Select a {filter} in the list or on the diagram.')+'</div>';return;}
   el.innerHTML=`<h3><span class="sw" style="background:${cmpColor(r.A)};width:18px;height:18px"></span><span class="sw" style="background:${cmpColor(r.B)};width:18px;height:18px;margin-left:2px"></span>${esc(r.f.name)}</h3>
-  <div class="readout" style="grid-template-columns:repeat(2,minmax(0,1fr))">${[['Shift Δu′v′',f4(r.shift)],['u′ A → B',f3(r.A.up)+' → '+f3(r.B.up)],['v′ A → B',f3(r.A.vp)+' → '+f3(r.B.vp)],[tk('{Out}')+' A',(r.yA*100).toFixed(1)+' %'],[tk('{Out}')+' B',(r.yB*100).toFixed(1)+' %']].map(([k,v])=>`<div class="kv"><span>${k}</span><b>${v}</b></div>`).join('')}</div>
+  <div class="readout" style="grid-template-columns:repeat(2,minmax(0,1fr))">${[['Shift Δu′v′',f4(r.shift)],['u′ A → B',f3(r.A.up)+' → '+f3(r.B.up)],['v′ A → B',f3(r.A.vp)+' → '+f3(r.B.vp)],[tk('{Out}')+' A (luminance)',(r.yA*100).toFixed(1)+' %'],[tk('{Out}')+' B (luminance)',(r.yB*100).toFixed(1)+' %'],['Brightness A → B',sgn(r.bright*100,1,' %')+' · '+sgn(r.stops,2,' st')],['Lightness L* change',sgn(r.dL,1,'')],['Energy passed A / B',(r.eA*100).toFixed(1)+' / '+(r.eB*100).toFixed(1)+' %'],['Energy absorbed A / B',((1-r.eA)*100).toFixed(1)+' / '+((1-r.eB)*100).toFixed(1)+' %']].map(([k,v])=>`<div class="kv"><span>${k}</span><b>${v}</b></div>`).join('')}</div>
   <canvas id="cm-dsp" class="sp" style="margin-top:10px"></canvas>
   <div class="legend"><span><i style="border-color:${lc.k[0]}"></i>Light that leaves, A</span><span><i style="border-color:${lc.k[1]}"></i>B</span><span><i style="border-color:var(--fg);border-top-style:dashed"></i>${tk('{curve}')}</span></div>`;
   const mulv=(S,T)=>{const o=new Float64Array(N);for(let i=0;i<N;i++)o[i]=S[i]*T[i];return o;};
   plotSpectra($('cm-dsp'),[{spd:r.f.T,color:cols.fg,dash:[4,3],width:1.2},{spd:mulv(R.LA.spd,r.f.T),color:lc.k[0],width:1.8},{spd:mulv(R.LB.spd,r.f.T),color:lc.k[1],width:1.8}],{h:150});}
-function cmRenderPairs(){const R=cmp.res,el=$('cm-pairs');if(!R){el.innerHTML='';return;}
-  el.innerHTML=[...R.rows].sort((a,b)=>b.shift-a.shift).slice(0,24).map(r=>`<button class="pair" data-id="${esc(r.f.id)}" aria-current="${r.f.id===cmp.sel}"><div class="sws"><div style="background:${cmpColor(r.A)}"></div><div style="background:${cmpColor(r.B)}"></div></div><div class="cap"><b>${esc(r.f.name)}</b><span>Δu′v′ ${(r.shift*1000).toFixed(1)}e-3</span></div></button>`).join('');}
+function cmRenderPairs(){const R=cmp.res,el=$('cm-pairs');
+  const H={shift:['Biggest colour shifts between A and B','Each tile shows the colour of the light that {leaves} under A (left) and B (right), at equal brightness: hue and saturation only. The number is Δu′v′ × 1000.'],
+    bright:['Biggest brightness changes between A and B','Brightness assumes both lights give the '+(cmp.equal==='power'?'same radiant power':'same luminous flux (lumens)')+'. Each tile shows the colour under A (left) and B (right), darkened by how much light gets through; the number is the change in brightness, A to B (+ = brighter under B).'],
+    energy:['Biggest changes in absorbed energy between A and B','The number is how many percentage points more (+) or less (−) of the light’s radiant energy is absorbed under B than under A. Tiles show the colour under A (left) and B (right).']}[cmp.metric];
+  $('cm-pairs-h').textContent=H[0];$('cm-pairs-hint').innerHTML=tk(H[1]);
+  if(!R){el.innerHTML='';return;}
+  el.innerHTML=[...R.rows].sort((a,b)=>cmMag(b)-cmMag(a)).slice(0,24).map(r=>`<button class="pair" data-id="${esc(r.f.id)}" aria-current="${r.f.id===cmp.sel}"><div class="sws"><div style="background:${cmTile(r,'A')}"></div><div style="background:${cmTile(r,'B')}"></div></div><div class="cap"><b>${esc(r.f.name)}</b><span>${cmp.metric==='shift'?'Δu′v′ '+cmMetricStr(r)+'e-3':cmMetricStr(r)}</span></div></button>`).join('');}
 $('cm-pairs').addEventListener('click',e=>{const b=e.target.closest('.pair');if(b)cmSelect(b.dataset.id);});
 function cmRenderSide(){const R=cmp.res;if(!R){$('cm-sum').innerHTML='Pick light A and light B to compare them.';
     for(const id of ['cm-tab','cm-cvgleg','cm-spleg'])$(id).innerHTML='';return;}
   const s=R.stats,mx=R.rows.reduce((m,r)=>r.shift>m.shift?r:m,R.rows[0]);
-  $('cm-sum').innerHTML=s.n?`Swapping <b>${esc(R.LA.name)}</b> for <b>${esc(R.LB.name)}</b> moves the average ${tk('{filter}')} by Δu′v′ <b>${f4(s.mean)}</b> (median ${f4(s.median)}, 90th percentile ${f4(s.p90)}). The biggest change is <b>${esc(mx.f.name)}</b> at <b>${f4(mx.shift)}</b>. The two white points differ by ${f4(R.wShift)}.${cmp.wp.mode==='none'?'':' Method: '+cmpWpName(cmp.wp)+', colours moved to the white of light '+cmp.wp.anchor+'.'}`
+  $('cm-sum').innerHTML=s.n?`Swapping <b>${esc(R.LA.name)}</b> for <b>${esc(R.LB.name)}</b> moves the average ${tk('{filter}')} by Δu′v′ <b>${f4(s.mean)}</b> (median ${f4(s.median)}, 90th percentile ${f4(s.p90)}). The biggest change is <b>${esc(mx.f.name)}</b> at <b>${f4(mx.shift)}</b>. The two white points differ by ${f4(R.wShift)}.${cmp.wp.mode==='none'?'':' Method: '+cmpWpName(cmp.wp)+', colours moved to the white of light '+cmp.wp.anchor+'.'} Brightness (${cmp.equal==='power'?'equal radiant power':'equal luminous flux'}): on average ${tk('{filters}')} come out <b>${cmWord(s.bMean*100,1,' %','brighter','darker')}</b> under B than under A (median ${cmWord(s.bMed*100,1,' %','brighter','darker')}). B absorbs <b>${cmWord(s.eMean*100,1,' pp','more','less')}</b> of the light’s energy than A.`
     :'None of the items produce light under both lights.';
   const a=R.LA.q,b=R.LB.q,d=(x,y,dg)=>x==null||y==null?'—':((y-x>=0?'+':'')+(y-x).toFixed(dg));
   const row=(n,x,y,dg)=>`<tr><td>${n}</td><td>${f0(x,dg)}</td><td>${f0(y,dg)}</td><td>${d(x,y,dg)}</td></tr>`;
@@ -2279,6 +2327,10 @@ function cmDrawSide(){const R=cmp.res;if(!R){return;}
   plotSpectra($('cm-sp'),[{spd:R.LA.spd,color:lc.k[0],width:2,fill:true},{spd:R.LB.spd,color:lc.k[1],width:2,fill:true}]);}
 
 /* ---- update ---- */
+function cmLegend(){const el=$('cm-mleg');if(!el)return;
+  if(cmp.metric==='shift'||!cmp.res){el.innerHTML='';el.hidden=true;return;}
+  const rg=cmRange(),b=cmp.metric==='bright',unit=b?' stops':' pp',scale=b?rg:rg*100,stops=[-1,-.5,0,.5,1].map(t=>cmDiv(t)).join(',');
+  el.hidden=false;el.innerHTML=`<span>${b?'darker under B':'B absorbs less'}</span><span class="grad" style="background:linear-gradient(90deg,${stops})"></span><span>${b?'brighter under B':'B absorbs more'}</span><span class="rg">dot colour: ±${scale.toFixed(b?2:1)}${unit} or more (95th percentile)</span>`;}
 function cmpUpdate(reframe){if(!cmp.visible){cmp.dirty=true;return;}cmp.dirty=false;
   if(!cmp.B&&cmp.A)cmp.B='ref:'+cmp.A;
   if(cmp.B&&cmp.B.startsWith('ref:'))cmp.B='ref:'+cmp.A;
@@ -2288,7 +2340,7 @@ function cmpUpdate(reframe){if(!cmp.visible){cmp.dirty=true;return;}cmp.dirty=fa
   if(cmp.res&&(!cmp.sel||!cmp.res.byId.has(cmp.sel)))cmp.sel=cmRows()[0]?.f.id||null;
   cmRenderDetail();cmDrawSide();
   const hint='Open dots are the colours under A, filled dots under B (drawn in the colour of the light they give). The line joins the two'+(cmp.mag>1?', stretched ×'+cmp.mag:'')+'. Crosses are the white points.';
-  $('cm-note').textContent=hint;
+  cmLegend();$('cm-note').textContent=hint;
   if(reframe||!cmp.keepFrame){cmp.view.size();cmFrame();cmp.keepFrame=true;}cmp.view.request();}
 function cmpRefresh(){if(cmp.visible){cmp.dirty=true;cmpUpdate(false);}else cmp.dirty=true;}
 LED.listeners.push(()=>{if(cmp.A&&!LED.items.has(cmp.A))cmp.A='std:LED-B3';if(cmp.B&&!cmp.B.startsWith('ref:')&&!LED.items.has(cmp.B))cmp.B='';cmpRefresh();});
@@ -2319,6 +2371,8 @@ $('cm-wp-dman').oninput=e=>cmWpChange(w=>{w.dman=Math.max(0,Math.min(1,+e.target
 $('cm-wp-la').oninput=e=>cmWpChange(w=>{w.LA=Math.max(1,+e.target.value||64);});
 $('cm-wp-f').onchange=e=>cmWpChange(w=>{w.F=+e.target.value;});
 cmWpSync();
+$('cm-metric').onchange=e=>{cmp.metric=e.target.value;cmp.sort={shift:'shift',bright:'bigb',energy:'bige'}[cmp.metric];$('cm-sort').value=cmp.sort;cmRenderList();cmRenderPairs();cmLegend();cmp.view.request();};
+$('cm-equal').onchange=e=>{cmp.equal=e.target.value;cmp.keepFrame=false;cmpUpdate(false);};
 $('cm-planck').onchange=e=>{cmp.planck=e.target.checked;cmp.view.request();};
 $('cm-frame').onclick=cmFrame;$('cm-whole').onclick=()=>{cmp.view.fit();cmp.view.request();};$('cm-zfit').onclick=$('cm-whole').onclick;
 $('cm-zin').onclick=()=>cmp.view.zoomAt((cmp.view.W+cmp.view.PAD.l-cmp.view.PAD.r)/2,(cmp.view.H-cmp.view.PAD.b+cmp.view.PAD.t)/2,1.5);

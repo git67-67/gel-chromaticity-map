@@ -37,8 +37,12 @@ with sync_playwright() as p:
         check(tag + "LEE and Munsell are import-only (no header button)", pg.evaluate("!document.querySelector('[data-ds=lee]') && !document.querySelector('[data-ds=mun]')"))
         check(tag + "LEE/Munsell offered in the import selector", pg.evaluate("[...document.querySelectorAll('#imp-kind option')].map(o=>o.value).includes('lee') && [...document.querySelectorAll('#imp-kind option')].map(o=>o.value).includes('mun')"))
         pg.click("[data-ds=pig]"); pg.wait_for_timeout(300)
+        pg.evaluate("addFilter({id:'flat50',name:'Flat 50',wl:[380,480,580,680,780],v:[.5,.5,.5,.5,.5]});recompute()"); pg.wait_for_timeout(200)
+        en = pg.evaluate("(()=>{const m=st.filters.get('flat50').res.m;return [m.energyOut,m.energyAbs]})()")
+        check(tag + "energy metric: flat 50 % filter passes 50 % and absorbs 50 %", abs(en[0] - 50) < 1e-6 and abs(en[1] - 50) < 1e-6, str(en))
+        pg.evaluate("st.filters.delete('flat50');recompute()")
         # metrics plug-in shows up
-        check(tag + "metric row in detail panel", "PEAK" in pg.inner_text("#detail").upper())
+        check(tag + "metric rows in detail panel", "PEAK" in pg.inner_text("#detail").upper() and "ENERGY ABSORBED" in pg.inner_text("#detail").upper())
         check(tag + "metric in sort menu", pg.evaluate("[...document.querySelectorAll('#s-sort option')].some(o=>o.value==='m:peakNm')"))
         pg.select_option("#s-sort", "m:peakNm"); pg.wait_for_timeout(100)
         # CSV export includes metric column
