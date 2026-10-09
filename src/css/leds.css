@@ -64,3 +64,6 @@
 @media(max-width:600px){.stage .toolrow label.chk{flex:1 1 100%}.stage .toolrow label.chk select{flex:1 1 100%;width:100%}}
 
 .plot3{position:relative;margin-top:8px}.plot3 canvas{width:100%;display:block;border:1px solid var(--line);border-radius:8px;touch-action:none;cursor:grab}.plot3 canvas:active{cursor:grabbing}
+
+.cmp-tab th.srt{cursor:pointer;user-select:none;white-space:nowrap}.cmp-tab th.srt:hover{color:var(--fg)}
+.o1-lnk{color:inherit;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}.o1-lnk:hover{color:var(--accent);text-decoration-color:currentColor}

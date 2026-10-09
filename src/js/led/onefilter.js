@@ -2,7 +2,7 @@
    reference (light A, or each light's own ideal reference at the same CCT) and see which lights in the library change
    how it looks the least or the most: colour shift, brightness, or both together (ΔE). Uses cmpCtx / cmpRowOf from compare.js,
    so the white-point treatment, equal lumens / watts and CIELUV / CAM02-UCS settings are the ones chosen above. */
-const o1={f:null,ref:'A',metric:'apparent',dir:'least',fq:'',c0:'',c1:'',res:[],sel:null,shown:30,raf:0,pts:[],refSpd:new Map()};
+const o1={f:null,ref:'A',metric:'apparent',dir:'least',fq:'',c0:'',c1:'',res:[],sel:null,sk:null,sd:1,shown:30,raf:0,pts:[],refSpd:new Map()};
 function o1RefOf(it){if(!it.q.ok)return null;const k=it.id+'|'+Math.round(it.q.cct);let r=o1.refSpd.get(k);
   if(r===undefined){const x=ledReference(it);r=x?{id:'ref:'+it.id,name:'Ideal reference for '+it.name,spd:x.spd}:null;o1.refSpd.set(k,r);}return r;}
 const o1Mag=r=>o1.metric==='bright'?Math.abs(r.row.stops):o1.metric==='shift'?r.row.shift:r.row.d.dE;
@@ -14,6 +14,8 @@ function o1Compute(){o1.res=[];const f=o1.f&&st.filters.get(o1.f);if(!f)return;
     let A=LA;if(o1.ref==='own'){A=o1RefOf(it);if(!A)continue;}else if(it.id===cmp.A)continue;
     const X=cmpCtx(A,{id:it.id,name:it.name,spd:it.spd}),row=cmpRowOf(X,f);if(!row)continue;
     o1.res.push({it,row,yBr:row.yB*X.rate});}
+  const KEY={name:r=>r.it.name,cct:r=>r.it.q.ok?r.it.q.cct:Infinity,shift:r=>r.row.shift,bright:r=>r.row.bright,dE:r=>r.row.d.dE};
+  if(o1.sk){const k=KEY[o1.sk],d=o1.sd;o1.res.sort((a,b)=>{const x=k(a),y=k(b);return d*(typeof x==='string'?x.localeCompare(y,undefined,{numeric:true}):x-y);});return;}
   const s=o1.dir==='least'?1:-1;o1.res.sort((a,b)=>s*(o1Mag(a)-o1Mag(b)));}
 const o1Unit=(r)=>o1.metric==='bright'?sgn(r.row.bright*100,0,' %'):o1.metric==='shift'?(r.row.shift*1000).toFixed(1):r.row.d.dE.toFixed(1);
 function o1Col(r,which,ym){const p=which==='A'?r.row.A:r.row.B;return o1.metric==='bright'?cmpColorY(p,which==='A'?r.row.yA:r.yBr,ym):cmpColor(p);}
@@ -32,7 +34,7 @@ function o1Render(){const R=o1.res,f=o1.f&&st.filters.get(o1.f),tab=$('o1-tab'),
   const desc=r=>`<b>${esc(r.it.name)}</b> (${o1.metric==='bright'?sgn(r.row.bright*100,0,' %'):o1Unit(r)})`;
   sum.innerHTML=`Compared with the same filter ${ref}, of ${R.length} lights, <b>${esc(f.name)}</b> changes least with ${desc(lo)} and most with ${desc(hi)}. Metric: ${lab}${o1.metric==='bright'?', '+(cmp.equal==='power'?'equal radiant power':'equal lumens'):''}.${cmp.wp.mode==='none'?'':' White-point method: '+esc(cmpWpName(cmp.wp))+'.'}`;
   const ym=R.reduce((m,r)=>Math.max(m,r.row.yA,r.yBr),1e-9),n=Math.min(o1.shown,R.length);
-  tab.innerHTML=`<table class="cmp-tab"><tr><th>Light</th><th>Colour</th><th>CCT</th><th>Δu′v′·10³</th><th>Bright.</th><th>${cmLab().E}</th></tr>${R.slice(0,n).map(r=>`<tr class="cand" data-id="${esc(r.it.id)}" aria-current="${r.it.id===o1.sel}"><td>${esc(r.it.name)}</td><td><i class="dsw" style="background:${o1Col(r,'A',ym)};margin:0 2px 0 0"></i><i class="dsw" style="background:${o1Col(r,'B',ym)};margin:0"></i></td><td>${r.it.q.ok?Math.round(r.it.q.cct):'—'}</td><td>${(r.row.shift*1000).toFixed(1)}</td><td>${sgn(r.row.bright*100,0,' %')}</td><td>${r.row.d.dE.toFixed(1)}</td></tr>`).join('')}</table>`;
+  tab.innerHTML=`<table class="cmp-tab"><tr>${[['name','Light'],[null,'Colour'],['cct','CCT'],['shift','Δu′v′·10³'],['bright','Bright.'],['dE',cmLab().E]].map(([k,t])=>k?`<th class="srt" data-k="${k}" tabindex="0" role="button" aria-sort="${o1.sk===k?(o1.sd>0?'ascending':'descending'):'none'}">${t}${o1.sk===k?(o1.sd>0?' ▲':' ▼'):''}</th>`:`<th>${t}</th>`).join('')}</tr>${R.slice(0,n).map(r=>`<tr class="cand" data-id="${esc(r.it.id)}" aria-current="${r.it.id===o1.sel}"><td><a href="#" class="o1-lnk" data-id="${esc(r.it.id)}" title="Open in the LED library">${esc(r.it.name)}</a></td><td><i class="dsw" style="background:${o1Col(r,'A',ym)};margin:0 2px 0 0"></i><i class="dsw" style="background:${o1Col(r,'B',ym)};margin:0"></i></td><td>${r.it.q.ok?Math.round(r.it.q.cct):'—'}</td><td>${(r.row.shift*1000).toFixed(1)}</td><td>${sgn(r.row.bright*100,0,' %')}</td><td>${r.row.d.dE.toFixed(1)}</td></tr>`).join('')}</table>`;
   $('o1-more').hidden=n>=R.length;$('o1-more').textContent='Show '+Math.min(30,R.length-n)+' more ('+n+' of '+R.length+')';
   o1.ym=ym;o1Plot();o1Detail();}
 function o1Detail(){const r=o1.res.find(x=>x.it.id===o1.sel),el=$('o1-sel');if(!r){el.innerHTML='';return;}
@@ -56,11 +58,15 @@ function o1Redo(reset){if(reset)o1.shown=30;o1Compute();o1Render();}
   g('o1-f').onchange=e=>{o1.f=e.target.value;o1.sel=null;o1Redo(true);};
   g('o1-use').onclick=()=>{if(cmp.sel&&st.filters.has(cmp.sel)){o1.f=cmp.sel;o1.fq='';g('o1-fq').value='';o1.sel=null;o1Sync();o1Redo(true);}};
   g('o1-ref').onchange=e=>{o1.ref=e.target.value;o1Redo(true);};
-  g('o1-metric').onchange=e=>{o1.metric=e.target.value;o1Redo(true);};
-  g('o1-dir').onchange=e=>{o1.dir=e.target.value;o1Redo(true);};
+  g('o1-metric').onchange=e=>{o1.metric=e.target.value;o1.sk=null;o1Redo(true);};
+  g('o1-dir').onchange=e=>{o1.dir=e.target.value;o1.sk=null;o1Redo(true);};
   for(const id of ['o1-c0','o1-c1'])g(id).oninput=e=>{o1[id.slice(3)]=e.target.value;clearTimeout(o1.t);o1.t=setTimeout(()=>o1Redo(true),200);};
   g('o1-more').onclick=()=>{o1.shown+=30;o1Render();};
-  g('o1-tab').addEventListener('click',e=>{const r=e.target.closest('.cand');if(r){o1.sel=r.dataset.id;o1Render();}});
+  const sortBy=k=>{if(o1.sk===k)o1.sd=-o1.sd;else{o1.sk=k;o1.sd=1;}o1Redo(false);};
+  g('o1-tab').addEventListener('keydown',e=>{const h=e.target.closest('.srt');if(h&&(e.key==='Enter'||e.key===' ')){e.preventDefault();sortBy(h.dataset.k);}});
+  g('o1-tab').addEventListener('click',e=>{const h=e.target.closest('.srt');if(h){sortBy(h.dataset.k);return;}
+    const l=e.target.closest('.o1-lnk');if(l){e.preventDefault();const id=l.dataset.id;ld.sel=id;showTab('leds');requestAnimationFrame(()=>requestAnimationFrame(()=>ldSelect(id,true)));return;}
+    const r=e.target.closest('.cand');if(r){o1.sel=r.dataset.id;o1Render();}});
   g('o1-sel').addEventListener('click',e=>{if(e.target.id==='o1-b'&&o1.sel){cmp.B=o1.sel;cmp.keepFrame=false;cmpUpdate(true);}});
   const cv=g('o1-cv');cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*cv.clientWidth/r.width,y=(e.clientY-r.top)*cv.clientHeight/r.height;
     let b=null,bd=144;for(const q of o1.pts){const d=(q.x-x)**2+(q.y-y)**2;if(d<bd){bd=d;b=q;}}if(b){o1.sel=b.id;const i=o1.res.findIndex(z=>z.it.id===b.id);if(i>=o1.shown)o1.shown=i+1;o1Render();}});
