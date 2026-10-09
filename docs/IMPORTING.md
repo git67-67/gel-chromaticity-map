@@ -90,7 +90,7 @@ Imported LEDs are saved in the browser (1000+ is fine). **Remove imported** dele
 
 ## Keeping a copy: backup file
 
-*Download backup* (in both panels) writes one file, `gel-map-backup.json`, with all your imported spectra sets and all imported LEDs. *Load backup* puts them back, in this or another browser. If your browser does not start a download (some embedded viewers block it), use *Copy backup text* and paste the text into a file with that name.
+*Save backup* (in both panels) writes one file, `gel-map-backup.json`, with all your imported spectra sets and all imported LEDs. *Load backup* puts them back, in this or another browser. If your browser does not start a download (some embedded viewers block it), use *Copy backup text* and paste the text into a file with that name.
 
 ## If nothing is saved
 

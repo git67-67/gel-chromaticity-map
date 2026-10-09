@@ -36,8 +36,8 @@ function usRefresh(){
   const parts=[...userSets].map(([k,v])=>`${v.length} ${DATASETS.has(k)?DATASETS.get(k).vocab.Filters.toLowerCase():k}`).join(', ');
   note.textContent=US.persist
     ?(parts?`Saved in this browser (${parts}). They load automatically next time.`:'Anything you import is saved in this browser automatically, so you do not have to import it again.')
-    :'This page cannot store data here, so imports last only until you close it. Use “Download backup” to keep them'+(parts?` (now held: ${parts}).`:'.');
-  const p=$('ld-persist');if(p&&typeof LED!=='undefined')p.textContent=LED.persist?'Imported lights are saved in this browser and load automatically next time. “Remove imported” deletes them.':'This page cannot store data here, so imported lights last only until you close it. Use “Download backup” to keep them.';}
+    :'This page cannot store data here, so imports last only until you close it. Use “Save backup” to keep them'+(parts?` (now held: ${parts}).`:'.');
+  const p=$('ld-persist');if(p&&typeof LED!=='undefined')p.textContent=LED.persist?'Imported lights are saved in this browser and load automatically next time. “Remove imported” deletes them.':'This page cannot store data here, so imported lights last only until you close it. Use “Save backup” to keep them.';}
 
 /* ---- backup file ---- */
 const BK_FORMAT='gel-chromaticity-map-library';
@@ -69,5 +69,6 @@ document.addEventListener('click',async e=>{
     document.getElementById('bk-file').click();return;}
   const text=backupBuild(),n=userSets.size+ledUser().length;
   if(!n){say('Nothing imported yet, so there is nothing to back up.','err');return;}
-  if(act==='download'){const ok=saveTextFile('gel-map-backup.json',text);say(ok?'Backup file created. If your browser did not offer a download, use “Copy backup text” instead.':'Could not create a file; use “Copy backup text”.',ok?'ok':'err');}
+  if(act==='download'){const ok=saveTextFile('gel-map-backup.json',text),cp=await copyText(text,ta);   // some embedded viewers block downloads: the text below is the fallback
+    say((ok?'Backup file created. ':'')+(cp?'The backup is also copied as text (below) in case your browser blocked the download: paste it into a file named gel-map-backup.json.':'If no download started, select the text below and save it as gel-map-backup.json.'),'ok');}
   else{const ok=await copyText(text,ta);say(ok?'Backup text copied. Paste it into a text file and save it as gel-map-backup.json.':'Select the text below, copy it, and save it as gel-map-backup.json.',ok?'ok':'');}});
