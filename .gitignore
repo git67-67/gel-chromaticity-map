@@ -4,3 +4,4 @@ __pycache__/
 lee_output/
 .DS_Store
 data/lee.json
+.bundles/
