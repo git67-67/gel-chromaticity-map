@@ -32,6 +32,16 @@ With D = 1 this is the plain von Kries scaling. With D < 1, adaptation is incomp
 
 **Truth** for the lab is the spectral XYZ of S_B·T divided by the Y of white B (S_B alone). **Prediction** is the CAT applied to the spectral XYZ under A, with both sides normalised to white Y = 1. **Error** is the Euclidean distance in the (u′, v′) plane. "No CAT" is the distance between the colour under A and the truth under B, i.e. the colour shift if nothing adapts.
 
+## White-point treatment in LED compare
+
+Light A has white W_A, light B has white W_B (XYZ scaled to Y = 1). A colour under B is mapped as if the eye had adapted from W_B to W_A, then compared with the same colour under A (or the reverse with "Move" set to A's colours).
+- **Plain shift**: u′v′ → u′v′ + (u′_A − u′_B, v′_A − v′_B), the same vector for every colour.
+- **CRI**: with c = (4 − u − 10v)/v and d = (1.708v + 0.404 − 1.481u)/v in CIE 1960 (u, v = u′, 2v′/3), c′ = (c_A/c_B)·c and d′ = (d_A/d_B)·d, then u = (10.872 + 0.404c′ − 4d′)/(16.518 + 1.481c′ − d′), v = 5.520/(16.518 + 1.481c′ − d′). Same code path as `cri.js`.
+- **Matrix CAT**: ρ = M·XYZ (cone-like responses), gain per channel g_i = (D/ρ_s,i + 1 − D) / (D/ρ_t,i + 1 − D) with ρ_s, ρ_t the responses to the source and target white (Y = 1), XYZ′ = M⁻¹·(g ∘ ρ). With D = 1 this is ρ′_i = ρ_i · ρ_t,i/ρ_s,i; with D = 0 nothing changes. Implemented by `catGains`/`catApply` in `lab/cat.js`. D = 1, or D = F(1 − e^((−L_A−42)/92)/3.6) from the viewing conditions, or set by hand.
+- **TM-30**: CAT02 with D = 1. TM-30 adapts test and reference to the same white inside CIECAM02; as that is a per-channel scaling, the B→A comparison equals one CAT02 step from W_B to W_A.
+
+Tests (`tests/leds.py`) check that W_B maps exactly onto W_A for every method with D = 1, that D = 0 equals "off", and that the TM-30 option equals CAT02 with D = 1.
+
 ## CRI (CIE 13.3-1995)
 
 Spectra are sampled every 5 nm from 380 to 780 nm. The reference light is a Planckian radiator below 5000 K and CIE daylight (D series) from 5000 K, at the test light's CCT. The 14 test colour samples are lit by both lights, converted to CIE 1960 UCS, and the sample under the test light is moved to the reference white with the CIE von Kries transform (`c`, `d` form of the standard). Colour differences are measured in U*V*W*, and R_i = 100 − 4.6 ΔE_i. Ra is the mean of R1–R8; R9–R14 are reported separately.

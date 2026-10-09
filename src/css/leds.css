@@ -48,3 +48,13 @@
 .drop.over{border-color:var(--accent);background:var(--hover)}
 
 .tabs{overflow-x:auto;scrollbar-width:thin}.tabs button{white-space:nowrap}
+
+.wpbox{margin:8px 0;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.wpbox .field{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.wpbox .field select{flex:1;min-width:200px}
+.wpgrid{display:grid;grid-template-columns:minmax(120px,max-content) 1fr;gap:6px 10px;align-items:center;margin:8px 0}
+.wpgrid input,.wpgrid select{width:100%;min-width:0}
+.wpbox h3{font-size:13px;margin:10px 0 4px}.wpbox ul{padding-left:18px;margin:4px 0}.wpbox li{margin:3px 0}
+.wpbox select,.wpbox input{max-width:100%}.wpbox .field select{min-width:0}
+@media(max-width:600px){.wpgrid{grid-template-columns:1fr}}
+.wpbox{flex:1 1 100%;min-width:0;box-sizing:border-box;max-width:100%}.wpbox *{min-width:0}
+.wpbox .field{flex-direction:row;align-items:center;gap:6px 10px}.wpbox .field label{white-space:nowrap}.wpbox .field select{flex:1 1 220px;width:auto;height:auto}

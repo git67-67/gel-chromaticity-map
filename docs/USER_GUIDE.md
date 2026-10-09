@@ -63,7 +63,16 @@ This is the tab for the question "what changes if I swap an LED for another one 
 
 1. Pick **light A** (the one you have in mind) and **light B** (what you swap in). B starts as the *ideal reference light* of A: a blackbody or daylight spectrum with exactly the same CCT, which scores Ra = Rf = Rg = 100. That shows what A gets wrong compared with perfect rendering.
 2. *Find a partner for A* lists every library light within a CCT window and a Duv window of A (defaults ±150 K and |ΔDuv| ≤ 0.003), sorted by Rf, Ra or Rg. Click a row to make it B. Because the chromaticity is almost the same, any difference you see is a rendering difference.
-3. The chart plots every filter (or pigment) twice, worked out from its real spectrum: an open dot under A and a filled dot, coloured with the colour it gives, under B, joined by a line. **Shift magnification** stretches the lines (the open dot stays at the true position) so small differences become visible. **Remove the white-point difference** subtracts the shift between the two white points, so only the change in how colours are rendered remains. *Frame the colours* zooms to the data.
+3. The chart plots every filter (or pigment) twice, worked out from its real spectrum: an open dot under A and a filled dot, coloured with the colour it gives, under B, joined by a line. **Shift magnification** stretches the lines (the open dot stays at the true position) so small differences become visible. **White-point difference** (a dropdown with advanced options, see below) takes out the part of the shift that comes only from the two lights having different white points, so only the change in how colours are rendered remains. *Frame the colours* zooms to the data.
+
+**White-point difference.** Swapping A for B moves a colour for two reasons: the lights render it differently, and the whole scene turns warmer or cooler. The dropdown chooses how the second part is removed (the eye mostly adapts to it):
+- *Off*: the real difference, white point included.
+- *Plain shift in u′v′*: every colour is moved by the vector between the two white points.
+- *CRI method*: von Kries in CIE 1960 u,v, as CIE 13.3 does for the colour rendering index.
+- *TM-30 method*: CAT02 with complete adaptation, the adaptation step of CIECAM02 that TM-30 uses.
+- *Matrix CAT*: XYZ scaling, von Kries (HPE), Bradford, CAT02, CAT16, Sharp or CMCCAT2000, with the degree of adaptation D (complete, from viewing conditions L<sub>A</sub> and surround, or by hand).
+
+*Advanced options* also let you choose which light stays fixed: B's colours are moved to A's white (default), or A's colours to B's. In every method the source light's white lands exactly on the target white, so what is left is the colour rendering difference. The panel itself carries a longer explanation.
 4. The summary line gives the mean, median, 90th percentile and largest Δu′v′. As a rough guide, differences under about 0.002 are hard to see and above about 0.01 are obvious side by side.
 5. The **TM-30 colour vector graphics** overlay A and B. The circle is each light's own reference; a dot outside it means that hue is more saturated, inside less, sideways a hue shift. The **table** gives CCT, Duv, Ra, R9, Rf and Rg for both and the difference. *Biggest changes* shows A and B as pairs of swatches.
 6. Click a filter on the chart or in the list to see its spectrum together with the light that leaves it under A and under B.

@@ -33,7 +33,32 @@
         </div>
         <div class="toolrow">
           <label class="magctl" for="cm-mag">Shift magnification <input type="range" id="cm-mag" min="1" max="40" step="1" value="1"><b id="cm-magv">×1</b></label>
-          <label class="chk"><input type="checkbox" id="cm-nowhite"> Remove the white-point difference</label>
+        </div>
+        <div class="wpbox">
+          <div class="field"><label for="cm-wp">White-point difference</label><select id="cm-wp"></select></div>
+          <p class="note" id="cm-wp-expl"></p>
+          <details class="sub" id="cm-wp-adv">
+            <summary>Advanced options and how it works</summary>
+            <div class="wpgrid">
+              <label for="cm-wp-anchor">Move</label>
+              <select id="cm-wp-anchor"><option value="A">B’s colours to A’s white (A stays as measured)</option><option value="B">A’s colours to B’s white (B stays as measured)</option></select>
+              <label for="cm-wp-dmode">Degree of adaptation D</label>
+              <select id="cm-wp-dmode"><option value="full">Complete (D = 1)</option><option value="view">From viewing conditions (CIECAM02)</option><option value="manual">Set by hand</option></select>
+              <label for="cm-wp-dman">D by hand (0–1)</label><input type="number" id="cm-wp-dman" min="0" max="1" step="0.05">
+              <label for="cm-wp-la">Adapting luminance L<sub>A</sub> (cd/m²)</label><input type="number" id="cm-wp-la" min="1" step="1">
+              <label for="cm-wp-f">Surround</label>
+              <select id="cm-wp-f"><option value="1">Average (F = 1.0)</option><option value="0.9">Dim (F = 0.9)</option><option value="0.8">Dark (F = 0.8)</option></select>
+            </div>
+            <p class="note">D, L<sub>A</sub> and the surround only apply to the “Matrix CAT” methods. The CRI and TM-30 methods use their standards’ fixed settings.</p>
+            <h3>What “removing the white-point difference” means</h3>
+            <p class="note">Swapping light A for light B changes every colour for two reasons: the lights render each colour differently (what you want to see), and the whole scene gets warmer or cooler because the white points differ. Your eye mostly adapts to the second part. A white-point treatment takes it out, so what remains is the change in <em>rendering</em>. It works on light B’s colours by default: each is converted as if the eye had adapted from B’s white to A’s white, then compared with the same colour under A. B’s own white lands exactly on A’s white by construction.</p>
+            <ul class="note">
+              <li><b>Plain shift:</b> subtract the white-point difference (in u′v′) from every colour. It treats all colours alike.</li>
+              <li><b>CRI (CIE 13.3):</b> von Kries in CIE 1960 u,v. The c and d terms of each colour are scaled by (target white ÷ source white) and converted back. This is the 1995 CRI method, not a modern CAT.</li>
+              <li><b>TM-30 / CIECAM02:</b> CAT02, a sharpened cone-like space, with complete adaptation (D = 1). TM-30 adapts both the test and reference light to the same white inside CIECAM02; because that adaptation is a per-channel scaling, comparing the two is the same as one CAT02 step from B’s white to A’s.</li>
+              <li><b>Matrix CATs</b> (XYZ scaling, von Kries HPE, Bradford, CAT02, CAT16, Sharp, CMCCAT2000): the same recipe with a different matrix. D below 1 adapts only partly, leaving some of the white-point change in place. See the Adaptation lab tab to compare these against real spectra.</li>
+            </ul>
+          </details>
         </div>
         <div class="toolrow">
           <button class="btn sm" id="cm-frame">Frame the colours</button><button class="btn sm" id="cm-whole">Whole diagram</button>

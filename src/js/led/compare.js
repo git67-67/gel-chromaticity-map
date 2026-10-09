@@ -1,6 +1,6 @@
 /* LED compare tab: how every filter / pigment moves when light A is swapped for light B, plus what each light does to hue and
    saturation (TM-30 colour vector graphic). A and B are library ids; 'ref:' + id is the ideal reference light of that LED. */
-const cmp={A:'std:LED-B3',B:'',mode:'uv',mag:1,noWhite:false,planck:true,sel:null,q:'',sort:'shift',visible:false,dirty:true,find:false,res:null,view:null,tolC:150,tolD:0.003,candSort:'rf',candA:'',cands:[]};
+const cmp={A:'std:LED-B3',B:'',mode:'uv',mag:1,wp:{mode:'none',cat:'bfd',anchor:'A',dmode:'full',dman:1,LA:64,F:1},planck:true,sel:null,q:'',sort:'shift',visible:false,dirty:true,find:false,res:null,view:null,tolC:150,tolD:0.003,candSort:'rf',candA:'',cands:[]};
 const cmQ={}; // quality cache for reference lights
 function cmLight(id){ // -> {id,name,spd,q} or null
   if(!id)return null;
@@ -13,14 +13,33 @@ const cmPickB=mountPicker($('cm-pickB'),{get:()=>cmp.B&&!cmp.B.startsWith('ref:'
 const cmReadout=(L)=>{if(!L)return'<div class="note">Pick a light.</div>';const q=L.q,a=q.cri&&q.cri.Ra,t=q.tm30;
   return[['CCT',fmtK(q.cct)],['Duv',f0(q.duv,4)],['CRI Ra',f0(a,0)],['R9',f0(q.cri&&q.cri.R[8],0)],['Rf',f0(t&&t.Rf,0)],['Rg',f0(t&&t.Rg,0)]].map(([k,v])=>`<div class="kv"><span>${k}</span><b>${v}</b></div>`).join('');};
 
+/* ---- white-point handling ----
+   Two lights have different white points, so every colour moves partly just because the whole picture got warmer or cooler.
+   A "white-point treatment" maps the colours seen under the source light to what they would be after the eye adapts to the
+   target white. Methods: none; plain shift in u'v'; the CRI (CIE 13.3) von Kries in CIE 1960 u,v; the TM-30/CIECAM02 step
+   (CAT02, full adaptation); or any matrix CAT from the Adaptation lab with a degree of adaptation D.
+   Ws, Wd = {xyz:[X,Y,Z with Y=1], up, vp} of the source and target white. Returns f(xyz, chroma) -> {up,vp} or null. */
+function cmpAdapter(wp,Ws,Wd){
+  if(wp.mode==='none')return null;
+  if(wp.mode==='shift'){const dU=Wd.up-Ws.up,dV=Wd.vp-Ws.vp;return(xyz,c)=>({up:c.up+dU,vp:c.vp+dV});}
+  if(wp.mode==='cri'){const cd=(u,v)=>[(4-u-10*v)/v,(1.708*v+.404-1.481*u)/v],[ck,dk]=cd(Ws.up,Ws.vp*2/3),[cr,dr]=cd(Wd.up,Wd.vp*2/3);
+    return(xyz,c)=>{const[cc,dd]=cd(c.up,c.vp*2/3),ca=cr/ck*cc,da=dr/dk*dd,den=16.518+1.481*ca-da;return{up:(10.872+.404*ca-4*da)/den,vp:1.5*5.52/den};};}
+  const C=CATS.find(x=>x.id===(wp.mode==='tm30'?'cat02':wp.cat))||CATS[0],D=wp.mode==='tm30'?1:degreeD(wp.dmode,wp.dman,wp.LA,wp.F),Mi=inv3(C.M),g=catGains(C.M,Ws.xyz,Wd.xyz,D);
+  return xyz=>{const p=ptOf(catApply(C.M,Mi,g,xyz));return p?{up:p.u,vp:p.v}:null;};}
+function cmpWpName(wp){return wp.mode==='none'?'no white-point correction':wp.mode==='shift'?'plain u′v′ shift':wp.mode==='cri'?'CRI von Kries (CIE 1960 u,v)':wp.mode==='tm30'?'TM-30 / CIECAM02 (CAT02, D = 1)':(CATS.find(x=>x.id===wp.cat)||CATS[0]).name+(wp.dmode==='full'?', D = 1':wp.dmode==='manual'?', D = '+(+wp.dman).toFixed(2):', D from viewing conditions');}
+const cmpPt=(up,vp)=>{const dd=6*up-16*vp+12;return{up,vp,x:9*up/dd,y:4*vp/dd,u:up,v:vp*2/3};};
+
 /* ---- calculation ---- */
 function cmpCompute(){const LA=cmLight(cmp.A),LB=cmLight(cmp.B);if(!LA||!LB){cmp.res=null;return;}
-  const sa=sums(LA.spd),sb=sums(LB.spd),wA=chroma(...sa),wB=chroma(...sb),rows=[],byId=new Map();
-  const dU=cmp.noWhite?wA.up-wB.up:0,dV=cmp.noWhite?wA.vp-wB.vp:0;
+  const sa=sums(LA.spd),sb=sums(LB.spd),wA=chroma(...sa),wB=chroma(...sb),rows=[],byId=new Map(),wp=cmp.wp;
+  const nW=(s,w)=>({xyz:[s[0]/s[1],1,s[2]/s[1]],up:w.up,vp:w.vp});
+  const fromA=wp.anchor==='B';   // anchor 'A': B's colours are moved to A's white. anchor 'B': A's colours are moved to B's white.
+  const adapt=cmpAdapter(wp,fromA?nW(sa,wA):nW(sb,wB),fromA?nW(sb,wB):nW(sa,wA));
   for(const f of st.filters.values()){if(!f.T)f.T=resample(f.wl,f.v,st.edge);
     const ta=sums(LA.spd,f.T),tb=sums(LB.spd,f.T);if(!(ta[1]>1e-9&&tb[1]>1e-9))continue;
-    const A=chroma(...ta),B0=chroma(...tb);
-    const up=B0.up+dU,vp=B0.vp+dV,dd=6*up-16*vp+12,B={up,vp,x:9*up/dd,y:4*vp/dd,u:up,v:vp*2/3};   // B with the optional white shift removed
+    let A=chroma(...ta),B=chroma(...tb);
+    if(adapt){const m=fromA?adapt([ta[0]/sa[1],ta[1]/sa[1],ta[2]/sa[1]],A):adapt([tb[0]/sb[1],tb[1]/sb[1],tb[2]/sb[1]],B);if(!m)continue;
+      if(fromA)A=cmpPt(m.up,m.vp);else B=cmpPt(m.up,m.vp);}
     const row={f,A,B,shift:Math.hypot(B.up-A.up,B.vp-A.vp),yA:ta[1]/sa[1],yB:tb[1]/sb[1]};rows.push(row);byId.set(f.id,row);}
   const s=rows.map(r=>r.shift).sort((a,b)=>a-b),pct=p=>s.length?s[Math.min(s.length-1,Math.floor(p*(s.length-1)))]:NaN;
   cmp.res={LA,LB,wA,wB,rows,byId,stats:{mean:s.length?s.reduce((a,b)=>a+b,0)/s.length:NaN,median:pct(.5),p90:pct(.9),max:s.length?s[s.length-1]:NaN,n:s.length},
@@ -96,7 +115,7 @@ $('cm-pairs').addEventListener('click',e=>{const b=e.target.closest('.pair');if(
 function cmRenderSide(){const R=cmp.res;if(!R){$('cm-sum').innerHTML='Pick light A and light B to compare them.';
     for(const id of ['cm-tab','cm-cvgleg','cm-spleg'])$(id).innerHTML='';return;}
   const s=R.stats,mx=R.rows.reduce((m,r)=>r.shift>m.shift?r:m,R.rows[0]);
-  $('cm-sum').innerHTML=s.n?`Swapping <b>${esc(R.LA.name)}</b> for <b>${esc(R.LB.name)}</b> moves the average ${tk('{filter}')} by Δu′v′ <b>${f4(s.mean)}</b> (median ${f4(s.median)}, 90th percentile ${f4(s.p90)}). The biggest change is <b>${esc(mx.f.name)}</b> at <b>${f4(mx.shift)}</b>. The two white points differ by ${f4(R.wShift)}${cmp.noWhite?' (removed from the shifts)':''}.`
+  $('cm-sum').innerHTML=s.n?`Swapping <b>${esc(R.LA.name)}</b> for <b>${esc(R.LB.name)}</b> moves the average ${tk('{filter}')} by Δu′v′ <b>${f4(s.mean)}</b> (median ${f4(s.median)}, 90th percentile ${f4(s.p90)}). The biggest change is <b>${esc(mx.f.name)}</b> at <b>${f4(mx.shift)}</b>. The two white points differ by ${f4(R.wShift)}.${cmp.wp.mode==='none'?'':' Method: '+cmpWpName(cmp.wp)+', colours moved to the white of light '+cmp.wp.anchor+'.'}`
     :'None of the items produce light under both lights.';
   const a=R.LA.q,b=R.LB.q,d=(x,y,dg)=>x==null||y==null?'—':((y-x>=0?'+':'')+(y-x).toFixed(dg));
   const row=(n,x,y,dg)=>`<tr><td>${n}</td><td>${f0(x,dg)}</td><td>${f0(y,dg)}</td><td>${d(x,y,dg)}</td></tr>`;
@@ -128,7 +147,26 @@ $('cm-ref').onclick=()=>{cmp.B='ref:'+cmp.A;cmpUpdate(true);};
 function cmSpace(s){cmp.mode=cmp.view.mode=s;$('cm-uv').setAttribute('aria-pressed',s==='uv');$('cm-xy').setAttribute('aria-pressed',s==='xy');cmp.view.V.user=false;cmp.view.fit();cmFrame();cmp.view.request();}
 $('cm-uv').onclick=()=>cmSpace('uv');$('cm-xy').onclick=()=>cmSpace('xy');
 $('cm-mag').oninput=e=>{cmp.mag=+e.target.value;$('cm-magv').textContent='×'+cmp.mag;$('cm-note').textContent=cmp.mag>1?'Shifts are stretched ×'+cmp.mag+' so small differences are visible; the open dot is the true colour under A.':'Open dots are the colours under A, filled dots under B. The line joins the two. Crosses are the white points.';cmp.view.request();};
-$('cm-nowhite').onchange=e=>{cmp.noWhite=e.target.checked;cmpUpdate(false);};
+/* white-point options */
+(function(){const sel=$('cm-wp');
+  sel.innerHTML=[['none','Off: show the real difference'],['shift','Plain shift in u′v′ (simple)'],['cri','CRI method: von Kries in CIE 1960 u,v'],['tm30','TM-30 method: CIECAM02 (CAT02, complete adaptation)'],...CATS.map(c=>['cat:'+c.id,'Matrix CAT: '+c.name])].map(([v,t])=>`<option value="${v}">${t}</option>`).join('');})();
+function cmWpSync(){const w=cmp.wp,isCat=w.mode==='cat';
+  $('cm-wp').value=w.mode==='cat'?'cat:'+w.cat:w.mode;$('cm-wp-anchor').value=w.anchor;$('cm-wp-dmode').value=w.dmode;$('cm-wp-dman').value=w.dman;$('cm-wp-la').value=w.LA;$('cm-wp-f').value=w.F;
+  $('cm-wp-dmode').disabled=!isCat;$('cm-wp-dman').disabled=!isCat||w.dmode!=='manual';$('cm-wp-la').disabled=!isCat||w.dmode!=='view';$('cm-wp-f').disabled=!isCat||w.dmode!=='view';
+  const T={none:'The shifts are the real difference between the two lights, including the overall change of white point.',
+    shift:'Every colour under B is moved by the same amount in u′v′: the difference between the two white points. Fast and easy to see, but it ignores that the eye adapts differently to different colours.',
+    cri:'The method CRI (CIE 13.3) uses: each colour is converted to CIE 1960 u,v, then a von Kries adaptation (scaling the c and d terms) maps B’s white onto A’s white.',
+    tm30:'The step inside TM-30 (CIECAM02): the CAT02 matrix, scaling cone-like responses, with complete adaptation (D = 1) to the white.',
+    cat:'A matrix chromatic adaptation transform in XYZ: convert to cone-like responses with the transform’s matrix, scale each by (target white ÷ source white), convert back. “D” sets how complete the adaptation is.'};
+  $('cm-wp-expl').textContent=T[w.mode];}
+function cmWpChange(fn){fn(cmp.wp);cmWpSync();cmp.keepFrame=false;cmpUpdate(false);}
+$('cm-wp').onchange=e=>cmWpChange(w=>{const v=e.target.value;if(v.startsWith('cat:')){w.mode='cat';w.cat=v.slice(4);}else w.mode=v;});
+$('cm-wp-anchor').onchange=e=>cmWpChange(w=>{w.anchor=e.target.value;});
+$('cm-wp-dmode').onchange=e=>cmWpChange(w=>{w.dmode=e.target.value;});
+$('cm-wp-dman').oninput=e=>cmWpChange(w=>{w.dman=Math.max(0,Math.min(1,+e.target.value||0));});
+$('cm-wp-la').oninput=e=>cmWpChange(w=>{w.LA=Math.max(1,+e.target.value||64);});
+$('cm-wp-f').onchange=e=>cmWpChange(w=>{w.F=+e.target.value;});
+cmWpSync();
 $('cm-planck').onchange=e=>{cmp.planck=e.target.checked;cmp.view.request();};
 $('cm-frame').onclick=cmFrame;$('cm-whole').onclick=()=>{cmp.view.fit();cmp.view.request();};$('cm-zfit').onclick=$('cm-whole').onclick;
 $('cm-zin').onclick=()=>cmp.view.zoomAt((cmp.view.W+cmp.view.PAD.l-cmp.view.PAD.r)/2,(cmp.view.H-cmp.view.PAD.b+cmp.view.PAD.t)/2,1.5);

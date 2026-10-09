@@ -43,8 +43,25 @@ with sync_playwright() as p:
         pg.click('#cm-cands tr.cand >> nth=0'); pg.wait_for_timeout(500)
         txt = pg.inner_text('#cm-sum'); check(tag + ' compare summary names both lights and a shift', 'Swapping' in txt and 'Δu′v′' in txt, txt[:90])
         check(tag + ' compare lists every filter', pg.evaluate('cmp.res.rows.length') == 97)
-        a = pg.evaluate('cmp.res.stats.mean'); pg.check('#cm-nowhite'); pg.wait_for_timeout(300); a2 = pg.evaluate('cmp.res.stats.mean')
-        check(tag + ' removing the white-point difference changes the shifts', abs(a - a2) > 1e-7 or pg.evaluate('cmp.res.wShift') < 1e-7, (a, a2))
+        modes = ['none', 'shift', 'cri', 'tm30'] + ['cat:' + c for c in pg.evaluate('CATS.map(c=>c.id)')]
+        means = {}
+        for m in modes:
+            pg.select_option('#cm-wp', m); pg.wait_for_timeout(120)
+            means[m] = pg.evaluate('cmp.res.stats.mean')
+        check(tag + ' every white-point method gives finite shifts', all(v == v and v >= 0 for v in means.values()), str(means))
+        check(tag + ' a method changes the shifts (when the white points differ)', pg.evaluate('cmp.res.wShift') < 1e-4 or abs(means['none'] - means['shift']) > 1e-7, str(means))
+        check(tag + ' TM-30 method equals CAT02 with D = 1', abs(means['tm30'] - means['cat:cat02']) < 1e-9, str((means['tm30'], means['cat:cat02'])))
+        # B's own white must land exactly on A's white for every method with complete adaptation
+        bad = pg.evaluate("""(()=>{const LA=cmLight(cmp.A),LB=cmLight(cmp.B),sa=sums(LA.spd),sb=sums(LB.spd),wA=chroma(...sa),wB=chroma(...sb),
+          nW=(s,w)=>({xyz:[s[0]/s[1],1,s[2]/s[1]],up:w.up,vp:w.vp}),out=[];
+          for(const mode of ['shift','cri','tm30','cat']){for(const c of CATS){const wp={mode,cat:c.id,dmode:'full',dman:1,LA:64,F:1},f=cmpAdapter(wp,nW(sb,wB),nW(sa,wA)),r=f([sb[0]/sb[1],1,sb[2]/sb[1]],wB);
+            if(Math.hypot(r.up-wA.up,r.vp-wA.vp)>1e-9)out.push(mode+':'+c.id);if(mode!=='cat')break;}}return out;})()""")
+        check(tag + ' every method maps B\'s white onto A\'s white', not bad, str(bad))
+        pg.click('#cm-wp-adv summary'); pg.select_option('#cm-wp', 'cat:bfd'); pg.select_option('#cm-wp-dmode', 'manual'); pg.fill('#cm-wp-dman', '0'); pg.wait_for_timeout(150)
+        check(tag + ' D = 0 means no adaptation (same as off)', abs(pg.evaluate('cmp.res.stats.mean') - means['none']) < 1e-9)
+        pg.select_option('#cm-wp-dmode', 'full'); pg.select_option('#cm-wp-anchor', 'B'); pg.wait_for_timeout(150)
+        check(tag + ' anchoring on B works', pg.evaluate('cmp.res.stats.mean') == pg.evaluate('cmp.res.stats.mean') and 'light B' in pg.inner_text('#cm-sum'), pg.inner_text('#cm-sum')[-120:])
+        pg.select_option('#cm-wp-anchor', 'A'); pg.select_option('#cm-wp', 'none'); pg.wait_for_timeout(100)
         pg.click('#cm-ref'); pg.wait_for_timeout(300)
         check(tag + ' ideal reference as B gives Ra = Rf = 100', pg.evaluate("(()=>{const q=cmLight(cmp.B).q;return Math.abs(q.cri.Ra-100)<.5&&Math.abs(q.tm30.Rf-100)<.5})()"))
         check(tag + ' no horizontal page scroll', pg.evaluate('document.documentElement.scrollWidth<=innerWidth+1'), pg.evaluate('document.documentElement.scrollWidth'))
