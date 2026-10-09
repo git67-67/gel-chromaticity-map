@@ -77,6 +77,19 @@ with sync_playwright() as p:
             check(tag + f' metric "{m}" fills tiles and heading', pg.locator('#cm-pairs .pair').count() == 24 and len(pg.inner_text('#cm-pairs-h')) > 10, pg.inner_text('#cm-pairs-h'))
         pg.select_option('#cm-metric', 'bright'); pg.wait_for_timeout(150)
         check(tag + ' brightness legend shows', pg.is_visible('#cm-mleg'), pg.inner_text('#cm-mleg'))
+        # apparent change (colour + brightness) and the 3D view
+        pg.select_option('#cm-wp', 'tm30')   # white points matched, so a flat filter must show no change at all
+        for sp in ('luv', 'cam'):
+            pg.select_option('#cm-space', sp); pg.select_option('#cm-metric', 'apparent'); pg.wait_for_timeout(200)
+            ok = pg.evaluate("cmp.res.rows.every(r=>{const a=r.P[0],b=r.P[1];return Math.abs(r.d.dE-Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]))<1e-9&&isFinite(r.d.dE)})")
+            check(tag + f' [{sp}] dE is the 3D distance between the colours under A and B', ok)
+            fr = pg.evaluate("(()=>{const r=cmp.res.byId.get('flat50');return [r.d.dE,r.d.dC,r.d.dH,r.d.dL]})()")
+            check(tag + f' [{sp}] flat 50 % filter: no apparent change at equal lumens (A = B)', fr[0] < 1e-6, str(fr))
+            check(tag + f' [{sp}] pairs tiles and summary mention the apparent change', pg.locator('#cm-pairs .pair').count() == 24 and 'Apparent change' in pg.inner_text('#cm-sum') and 'ΔE' in pg.inner_text('#cm-pairs'), pg.inner_text('#cm-pairs-h'))
+            drawn = pg.evaluate("(()=>{const c=document.getElementById('cm-3d'),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;const bg=[d[0],d[1],d[2]];for(let i=0;i<d.length;i+=4)if(Math.abs(d[i]-bg[0])+Math.abs(d[i+1]-bg[1])+Math.abs(d[i+2]-bg[2])>30)n++;return n})()")
+            check(tag + f' [{sp}] 3D view is drawn', drawn > 800, str(drawn))
+        pg.click('#c3-top'); pg.wait_for_timeout(150); pg.click('#c3-side'); pg.wait_for_timeout(150); pg.click('#c3-3d'); pg.wait_for_timeout(150)
+        pg.select_option('#cm-space', 'luv'); pg.select_option('#cm-wp', 'none'); pg.wait_for_timeout(100)
         pg.select_option('#cm-metric', 'shift'); pg.evaluate("st.filters.delete('flat50');cmpUpdate(false)"); pg.wait_for_timeout(100)
         pg.click('#cm-ref'); pg.wait_for_timeout(300)
         check(tag + ' ideal reference as B gives Ra = Rf = 100', pg.evaluate("(()=>{const q=cmLight(cmp.B).q;return Math.abs(q.cri.Ra-100)<.5&&Math.abs(q.tm30.Rf-100)<.5})()"))

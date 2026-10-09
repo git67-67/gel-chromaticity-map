@@ -61,7 +61,8 @@
           </details>
         </div>
         <div class="toolrow">
-          <label class="chk" for="cm-metric">Show <select id="cm-metric"><option value="shift">Colour shift (dots in the colour under B)</option><option value="bright">Brightness change (dots blue = darker, orange = brighter)</option><option value="energy">Absorbed energy (dots blue = B absorbs less)</option></select></label>
+          <label class="chk" for="cm-metric">Show <select id="cm-metric"><option value="shift">Colour shift (dots in the colour under B)</option><option value="bright">Brightness change (dots blue = darker, orange = brighter)</option><option value="apparent">Apparent change: colour + brightness together (ΔE)</option><option value="energy">Absorbed energy (dots blue = B absorbs less)</option></select></label>
+          <label class="chk" for="cm-space">Colour space for ΔE <select id="cm-space"><option value="luv">CIELUV (uses the white-point setting)</option><option value="cam">CAM02-UCS (as TM-30; each colour adapts to its own light)</option></select></label>
           <label class="chk" for="cm-equal">Compare brightness at <select id="cm-equal"><option value="lumen">equal luminous flux (same lumens)</option><option value="power">equal radiant power (same watts)</option></select></label>
         </div>
         <div class="toolrow">
@@ -76,6 +77,12 @@
       </div>
       <div class="legend mleg" id="cm-mleg" hidden></div>
       <div class="note tk" id="cm-note"></div>
+      <div class="panel" id="cm-3dp">
+        <h2>Colour and brightness together <span id="cm-3dlab" style="font-weight:400;color:var(--muted)"></span></h2>
+        <div class="toolrow"><button class="btn sm" id="c3-3d">3D</button><button class="btn sm" id="c3-top">Top: colour plane</button><button class="btn sm" id="c3-side">Side: lightness</button><span class="note" style="margin:0">Drag to rotate · wheel to zoom · click a dot to select</span></div>
+        <div class="plot3" id="cm-3dwrap"><canvas id="cm-3d" aria-label="3D view: each colour under light A (open dot) and light B (filled dot) in a perceptual colour space"></canvas><div class="tip" id="cm-3dtip" hidden></div></div>
+        <p class="hint">Vertical axis: lightness (how bright, relative to a white of the same light). Horizontal plane: colour, with grey in the middle and more saturated colours further out. Open dot = under A, filled dot = under B, joined by a line. The straight-line distance between the two dots is the apparent change ΔE: it combines a change in colour and a change in brightness in one number. A line that only goes up or down is a pure brightness change; one that only moves sideways is a pure colour change.</p>
+      </div>
       <div class="two">
         <div class="panel"><h2>TM-30 colour vector graphics</h2><canvas id="cm-cvg" class="cvg"></canvas><div class="legend" id="cm-cvgleg"></div>
           <p class="hint">Dots show where each light puts the 16 hue bins relative to its own reference light (the circle). A light that matches the reference sits on the circle. Light A and light B are drawn on top of each other so the differences stand out.</p></div>
@@ -90,7 +97,7 @@
         <h2><span class="tk">{Filters}</span> <span id="cm-count" style="font-weight:400"></span></h2>
         <div class="listhead">
           <input type="search" id="cm-q" placeholder="Search name or number" aria-label="Search" data-tk-ph="{search}">
-          <select id="cm-sort" aria-label="Sort"><option value="shift">Sort: largest colour shift</option><option value="small">Sort: smallest colour shift</option><option value="bigb">Sort: largest brightness change</option><option value="brup">Sort: brighter under B first</option><option value="brdn">Sort: darker under B first</option><option value="bige">Sort: largest absorbed-energy change</option><option value="code" class="tk">{sortNum}</option></select>
+          <select id="cm-sort" aria-label="Sort"><option value="bigd">Sort: largest apparent change (ΔE)</option><option value="shift">Sort: largest colour shift</option><option value="small">Sort: smallest colour shift</option><option value="bigb">Sort: largest brightness change</option><option value="brup">Sort: brighter under B first</option><option value="brdn">Sort: darker under B first</option><option value="bige">Sort: largest absorbed-energy change</option><option value="code" class="tk">{sortNum}</option></select>
         </div>
         <div class="list" id="cm-list"></div>
       </section>

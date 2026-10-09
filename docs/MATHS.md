@@ -32,6 +32,15 @@ With D = 1 this is the plain von Kries scaling. With D < 1, adaptation is incomp
 
 **Truth** for the lab is the spectral XYZ of S_B·T divided by the Y of white B (S_B alone). **Prediction** is the CAT applied to the spectral XYZ under A, with both sides normalised to white Y = 1. **Error** is the Euclidean distance in the (u′, v′) plane. "No CAT" is the distance between the colour under A and the truth under B, i.e. the colour shift if nothing adapts.
 
+## Apparent change (ΔE) in LED compare
+
+Each item gets a colour under A and under B, [L, a, b] in one of two spaces, and ΔE is the Euclidean distance between them (`core/apparent.js`).
+- **CIELUV**: L* = 116·∛(Y/Yn) − 16 (903.3·Y/Yn below 0.008856), u* = 13 L* (u′ − u′n), v* = 13 L* (v′ − v′n). Y is the item's luminance relative to the bare light (A = 1, B = rate at equal watts, 1 at equal lumens); (Yn, u′n, v′n) is the reference white, the bare light of the anchor. u′, v′ are the values after the chosen white-point treatment. Checked against colour-science `XYZ_to_Luv`.
+- **CAM02-UCS**: XYZ scaled so each light's bare white has Y = 100, CIECAM02 with L_A = 100, Y_b = 20, average surround, D = 1 (each colour adapted to its own light's white), then J′ = 1.7J/(1 + 0.007J), M′ = ln(1 + 0.0228M)/0.0228, a′ = M′cos h, b′ = M′sin h. This is the same code as TM-30's (`xyzToUCS`) but with CIE 1931 2° sums. Checked against colour-science `XYZ_to_CIECAM02(…, discount_illuminant=True)` → `JMh_CIECAM02_to_CAM02UCS`.
+- ΔE = √(ΔL² + Δa² + Δb²); ΔC = C_B − C_A with C = √(a² + b²); ΔH = √(ΔE² − ΔL² − ΔC²) (unsigned). Lightness, chroma and hue parts add up in quadrature by construction.
+
+Limits: CIELUV is less uniform than CAM02-UCS for large differences and for dark or very saturated colours. Both treat the chromaticity as measured with a 2° observer. The ΔE thresholds in the guide (1, 2–3, 5) are rules of thumb from colour-difference practice, not tuned for this tool.
+
 ## Brightness and energy in LED compare and the Colour map
 
 For a light with spectrum S(λ) and an item with transmission or reflectance T(λ) on the 380–780 nm grid:

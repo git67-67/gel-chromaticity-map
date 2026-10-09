@@ -2,10 +2,10 @@
 import fs from 'node:fs'; import vm from 'node:vm'; import path from 'node:path'; import {fileURLToPath} from 'node:url';
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const files = ['core/grid-cmf.js','core/spectra.js','core/locus.js','core/display.js','core/example-sources.js','core/evaluate.js','lab/cat.js',
-  'core/reference-light.js','core/cri.js','core/tm30.js','core/quality.js','app/import.js','led/parse.js'];
+  'core/reference-light.js','core/cri.js','core/tm30.js','core/quality.js','core/apparent.js','app/import.js','led/parse.js'];
 const COLT_JSON = fs.readFileSync(path.join(root,'data/colour-tables.json'),'utf8');
 const src = 'const COLT='+COLT_JSON+';\n' + files.map(f => fs.readFileSync(path.join(root,'src/js',f),'utf8')).join('\n') +
-  '\n;({sums,chroma,planckSPD,cctDuv,from5,D65_5,N,CATS,catGains,catApply,m3v,inv3,buildPcWhite,buildRgbLed,resample,cri,tm30,quality,REF_CIE224,REF_TM30,sample5,referenceLight5,REF_CRI,ingestLED,cleanLED,parseCSVFull})';
+  '\n;({sums,chroma,planckSPD,cctDuv,from5,D65_5,N,CATS,catGains,catApply,m3v,inv3,buildPcWhite,buildRgbLed,resample,cri,tm30,quality,lstarOf,luvOf,camUcsOf,apparentParts,REF_CIE224,REF_TM30,sample5,referenceLight5,REF_CRI,ingestLED,cleanLED,parseCSVFull})';
 const m = vm.runInContext(src, vm.createContext({console, Math, Float64Array}));
 let fail = 0;
 const ok = (name, cond, info='') => { console.log((cond?'PASS ':'FAIL ')+name+(info?'  '+info:'')); if(!cond) fail++; };
@@ -78,4 +78,17 @@ ok('semicolon file with decimal commas', r6.items[0].v[5]===0.5);
 const cl = m.cleanLED({wl:Array.from({length:30},(_,i)=>400+i),v:Array.from({length:30},(_,i)=>i===3?-5:i),meta:{}});
 ok('cleaning clips negatives and normalises to a peak of 1', cl&&cl.v[3]===0&&Math.max(...cl.v)===1);
 ok('a spectrum with too few points is rejected', m.cleanLED({wl:[400,500],v:[1,2],meta:{}})===null);
+// apparent difference vs colour-science (XYZ_to_Luv, CIECAM02 with D = 1 -> CAM02-UCS)
+{ const W=[0.95047,1,1.08883], wxy=[W[0]/(W[0]+W[1]+W[2]),W[1]/(W[0]+W[1]+W[2])], dd=W[0]+15*W[1]+3*W[2], upn=4*W[0]/dd, vpn=9*W[1]/dd;
+  const luv=(X,Y,Z)=>{const d=X+15*Y+3*Z;return m.luvOf(Y,4*X/d,9*Y/d,1,upn,vpn);};
+  for (const [xyz,exp] of [[[0.2,0.3,0.4],[61.65422,-49.89096,-8.58346]],[[0.5,0.4,0.1],[69.46953,86.94888,55.15749]],[[0.01,0.012,0.02],[10.55737,-5.19336,-4.98701]]]) {
+    const r=luv(...xyz); ok(`CIELUV of XYZ ${xyz} matches colour-science`, r.every((x,i)=>near(x,exp[i],2e-4)), r.map(x=>x.toFixed(3)).join(' ')); }
+  ok('CIELUV of the white is L* 100, u* = v* = 0', (r=>near(r[0],100,1e-9)&&near(r[1],0,1e-9)&&near(r[2],0,1e-9))(luv(...W)));
+  const Wc=W.map(x=>x*100);
+  for (const [xyz,exp] of [[[20,30,40],[62.8547,-28.9724,-8.122]],[[50,40,10],[74.5663,21.4919,28.8664]],[[70,72,60],[90.0892,4.3026,10.6926]]]) {
+    const r=m.camUcsOf(xyz,Wc); ok(`CAM02-UCS of XYZ ${xyz} matches colour-science (D = 1)`, r.every((x,i)=>near(x,exp[i],0.02)), r.map(x=>x.toFixed(3)).join(' ')); }
+  const rw=m.camUcsOf(Wc,Wc); ok('CAM02-UCS of the white is J\' 100, a\' b\' ~ 0 (as colour-science)', near(rw[0],100,1e-6)&&near(rw[1],0.0061026,1e-5)&&near(rw[2],0.00067807,1e-5));
+  const pp=m.apparentParts([50,10,0],[60,13,4]); ok('apparent parts: dE is the distance, dL, dC and dH add up in quadrature', near(pp.dE,Math.hypot(10,3,4),1e-12)&&near(pp.dL,10,1e-12)&&near(pp.dE*pp.dE,pp.dL*pp.dL+pp.dC*pp.dC+pp.dH*pp.dH,1e-9));
+  ok('a pure lightness change has dC = dH = 0', (q=>near(q.dC,0,1e-12)&&near(q.dH,0,1e-9))(m.apparentParts([50,10,5],[70,10,5])));
+}
 console.log(fail ? `\n${fail} FAILED` : '\nall passed'); process.exit(fail?1:0);
