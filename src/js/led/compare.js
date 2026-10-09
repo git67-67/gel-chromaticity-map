@@ -150,7 +150,7 @@ function cmRenderPairs(){const R=cmp.res,el=$('cm-pairs');
     energy:['Biggest changes in absorbed energy between A and B','The number is how many percentage points more (+) or less (−) of the light’s radiant energy is absorbed under B than under A. Tiles show the colour under A (left) and B (right).']}[cmp.metric];
   $('cm-pairs-h').textContent=H[0];$('cm-pairs-hint').innerHTML=tk(H[1]);
   if(!R){el.innerHTML='';return;}
-  el.innerHTML=[...R.rows].sort((a,b)=>cmMag(b)-cmMag(a)).slice(0,24).map(r=>`<button class="pair" data-id="${esc(r.f.id)}" aria-current="${r.f.id===cmp.sel}"><div class="sws"><div style="background:${cmTile(r,'A')}"></div><div style="background:${cmTile(r,'B')}"></div></div><div class="cap"><b>${esc(r.f.name)}</b><span>${cmp.metric==='shift'?'Δu′v′ '+cmMetricStr(r)+'e-3':cmMetricStr(r)}</span></div></button>`).join('');}
+  el.innerHTML=[...R.rows].sort((a,b)=>cmMag(b)-cmMag(a)).slice(0,24).map(r=>`<button class="pair" data-id="${esc(r.f.id)}" aria-current="${r.f.id===cmp.sel}"><div class="sws"><div style="background:${cmTile(r,'A')}"></div><div style="background:${cmTile(r,'B')}"></div></div><div class="cap"><b>${esc(r.f.name)}</b><span>${cmp.metric==='shift'?'Δu′v′ '+cmMetricStr(r)+'e-3':cmMetricStr(r)}</span><span>${cmLab().E} ${r.d.dE.toFixed(1)} · ${cmLab().L} ${sgn(r.d.dL,1,'')}</span></div></button>`).join('');}
 $('cm-pairs').addEventListener('click',e=>{const b=e.target.closest('.pair');if(b)cmSelect(b.dataset.id);});
 function cmRenderSide(){const R=cmp.res;if(!R){$('cm-sum').innerHTML='Pick light A and light B to compare them.';
     for(const id of ['cm-tab','cm-cvgleg','cm-spleg'])$(id).innerHTML='';return;}
