@@ -39,7 +39,7 @@ Each item gets a colour under A and under B, [L, a, b] in one of two spaces, and
 - **CAM02-UCS**: XYZ scaled so each light's bare white has Y = 100, CIECAM02 with L_A = 100, Y_b = 20, average surround, D = 1 (each colour adapted to its own light's white), then J′ = 1.7J/(1 + 0.007J), M′ = ln(1 + 0.0228M)/0.0228, a′ = M′cos h, b′ = M′sin h. This is the same code as TM-30's (`xyzToUCS`) but with CIE 1931 2° sums. Checked against colour-science `XYZ_to_CIECAM02(…, discount_illuminant=True)` → `JMh_CIECAM02_to_CAM02UCS`.
 - ΔE = √(ΔL² + Δa² + Δb²); ΔC = C_B − C_A with C = √(a² + b²); ΔH = √(ΔE² − ΔL² − ΔC²) (unsigned). Lightness, chroma and hue parts add up in quadrature by construction.
 
-Limits: CIELUV is less uniform than CAM02-UCS for large differences and for dark or very saturated colours. Both treat the chromaticity as measured with a 2° observer. The ΔE thresholds in the guide (1, 2–3, 5) are rules of thumb from colour-difference practice, not tuned for this tool.
+Very dark, very saturated stimuli can give a negative achromatic response in CIECAM02; it is clamped to zero (J′ = 0, black) so the ΔE stays defined. Standard TM-30 samples never get there. Limits: CIELUV is less uniform than CAM02-UCS for large differences and for dark or very saturated colours. Both treat the chromaticity as measured with a 2° observer. The ΔE thresholds in the guide (1, 2–3, 5) are rules of thumb from colour-difference practice, not tuned for this tool.
 
 ## Brightness and energy in LED compare and the Colour map
 

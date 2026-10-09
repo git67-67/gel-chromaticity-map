@@ -32,8 +32,8 @@ const cmpPt=(up,vp)=>{const dd=6*up-16*vp+12;return{up,vp,x:9*up/dd,y:4*vp/dd,u:
 
 /* ---- calculation ---- */
 const cmMean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:NaN,cmMedian=a=>{a=[...a].sort((x,y)=>x-y);return a.length?a[Math.floor((a.length-1)/2)]:NaN;};
-function cmpCompute(){const LA=cmLight(cmp.A),LB=cmLight(cmp.B);if(!LA||!LB){cmp.res=null;return;}
-  const sa=sums(LA.spd),sb=sums(LB.spd),wA=chroma(...sa),wB=chroma(...sb),rows=[],byId=new Map(),wp=cmp.wp;
+/* everything that depends only on the two lights (not on the filter): sums, brightness basis, reference white, white-point adapter */
+function cmpCtx(LA,LB){const sa=sums(LA.spd),sb=sums(LB.spd),wA=chroma(...sa),wB=chroma(...sb),wp=cmp.wp;
   const nW=(s,w)=>({xyz:[s[0]/s[1],1,s[2]/s[1]],up:w.up,vp:w.vp});
   const totA=cmSum(LA.spd),totB=cmSum(LB.spd);
   /* brightness basis: equal luminous flux (both bare lights give the same lumens, so brightness under B / under A = yB / yA),
@@ -41,18 +41,24 @@ function cmpCompute(){const LA=cmLight(cmp.A),LB=cmLight(cmp.B);if(!LA||!LB){cmp
   const rate=cmp.equal==='power'?(sb[1]/totB)/(sa[1]/totA):1;
   const fromA=wp.anchor==='B',Yn=fromA?rate:1,wRef=fromA?wB:wA;   // reference white of the CIELUV values: the light the other is compared with   // anchor 'A': B's colours are moved to A's white. anchor 'B': A's colours are moved to B's white.
   const adapt=cmpAdapter(wp,fromA?nW(sa,wA):nW(sb,wB),fromA?nW(sb,wB):nW(sa,wA));
-  for(const f of st.filters.values()){if(!f.T)f.T=resample(f.wl,f.v,st.edge);
-    const ta=sums(LA.spd,f.T),tb=sums(LB.spd,f.T);if(!(ta[1]>1e-9&&tb[1]>1e-9))continue;
-    let A=chroma(...ta),B=chroma(...tb);
-    if(adapt){const m=fromA?adapt([ta[0]/sa[1],ta[1]/sa[1],ta[2]/sa[1]],A):adapt([tb[0]/sb[1],tb[1]/sb[1],tb[2]/sb[1]],B);if(!m)continue;
-      if(fromA)A=cmpPt(m.up,m.vp);else B=cmpPt(m.up,m.vp);}
-    const yA=ta[1]/sa[1],yB=tb[1]/sb[1],eA=cmSum(LA.spd,f.T)/totA,eB=cmSum(LB.spd,f.T)/totB,ratio=yB*rate/yA;
-    const row={f,A,B,shift:Math.hypot(B.up-A.up,B.vp-A.vp),yA,yB,eA,eB,bright:ratio-1,stops:Math.log2(ratio),dL:lstarOf(yB*rate)-lstarOf(yA),dE:eA-eB};rows.push(row);byId.set(f.id,row);
-    /* apparent change: colour and brightness together */
-    let PA,PB;
-    if(cmp.space==='cam'){const k=(s0,t)=>[t[0]/s0[1]*100,t[1]/s0[1]*100,t[2]/s0[1]*100];PA=camUcsOf(k(sa,ta),k(sa,sa));PB=camUcsOf(k(sb,tb),k(sb,sb));}
-    else{PA=luvOf(yA,A.up,A.vp,Yn,wRef.up,wRef.vp);PB=luvOf(yB*rate,B.up,B.vp,Yn,wRef.up,wRef.vp);}
-    row.P=[PA,PB];row.d=apparentParts(PA,PB);}
+  return{LA,LB,sa,sb,wA,wB,totA,totB,rate,fromA,Yn,wRef,adapt};}
+/* one filter under the two lights of ctx X -> row {A,B,shift,yA,yB,eA,eB,bright,stops,dL,dE,P,d} or null if no light gets through */
+function cmpRowOf(X,f){const{LA,LB,sa,sb,rate,fromA,Yn,wRef,adapt,totA,totB}=X;
+  if(!f.T)f.T=resample(f.wl,f.v,st.edge);
+  const ta=sums(LA.spd,f.T),tb=sums(LB.spd,f.T);if(!(ta[1]>1e-9&&tb[1]>1e-9))return null;
+  let A=chroma(...ta),B=chroma(...tb);
+  if(adapt){const m=fromA?adapt([ta[0]/sa[1],ta[1]/sa[1],ta[2]/sa[1]],A):adapt([tb[0]/sb[1],tb[1]/sb[1],tb[2]/sb[1]],B);if(!m)return null;
+    if(fromA)A=cmpPt(m.up,m.vp);else B=cmpPt(m.up,m.vp);}
+  const yA=ta[1]/sa[1],yB=tb[1]/sb[1],eA=cmSum(LA.spd,f.T)/totA,eB=cmSum(LB.spd,f.T)/totB,ratio=yB*rate/yA;
+  const row={f,A,B,shift:Math.hypot(B.up-A.up,B.vp-A.vp),yA,yB,eA,eB,bright:ratio-1,stops:Math.log2(ratio),dL:lstarOf(yB*rate)-lstarOf(yA),dE:eA-eB};
+  /* apparent change: colour and brightness together */
+  let PA,PB;
+  if(cmp.space==='cam'){const k=(s0,t)=>[t[0]/s0[1]*100,t[1]/s0[1]*100,t[2]/s0[1]*100];PA=camUcsOf(k(sa,ta),k(sa,sa));PB=camUcsOf(k(sb,tb),k(sb,sb));}
+  else{PA=luvOf(yA,A.up,A.vp,Yn,wRef.up,wRef.vp);PB=luvOf(yB*rate,B.up,B.vp,Yn,wRef.up,wRef.vp);}
+  row.P=[PA,PB];row.d=apparentParts(PA,PB);return row;}
+function cmpCompute(){const LA=cmLight(cmp.A),LB=cmLight(cmp.B);if(!LA||!LB){cmp.res=null;return;}
+  const X=cmpCtx(LA,LB),{sa,sb,wA,wB,rate,fromA,Yn,wRef,adapt}=X,rows=[],byId=new Map();
+  for(const f of st.filters.values()){const row=cmpRowOf(X,f);if(!row)continue;rows.push(row);byId.set(f.id,row);}
   let PW;
   if(cmp.space==='cam')PW=[[100,0,0],[100,0,0]];
   else{const wa=adapt&&fromA?adapt([sa[0]/sa[1],1,sa[2]/sa[1]],wA):wA,wb=adapt&&!fromA?adapt([sb[0]/sb[1],1,sb[2]/sb[1]],wB):wB;
@@ -179,7 +185,7 @@ function cmpUpdate(reframe){if(!cmp.visible){cmp.dirty=true;return;}cmp.dirty=fa
   const LA=cmLight(cmp.A),LB=cmLight(cmp.B);$('cm-readA').innerHTML=cmReadout(LA);$('cm-readB').innerHTML=cmReadout(LB);
   cmpCompute();cmCands();cmRenderSide();cmRenderList();cmRenderPairs();
   if(cmp.res&&(!cmp.sel||!cmp.res.byId.has(cmp.sel)))cmp.sel=cmRows()[0]?.f.id||null;
-  cmRenderDetail();cmDrawSide();if(typeof c3Request==='function'){c3Request();$('cm-3dlab').textContent=cmSpaceName()+' ('+c3Axes().x+', '+c3Axes().y+', '+c3Axes().z+')';}
+  cmRenderDetail();cmDrawSide();if(typeof o1Update==='function')o1Update();if(typeof c3Request==='function'){c3Request();$('cm-3dlab').textContent=cmSpaceName()+' ('+c3Axes().x+', '+c3Axes().y+', '+c3Axes().z+')';}
   const hint='Open dots are the colours under A, filled dots under B (drawn in the colour of the light they give). The line joins the two'+(cmp.mag>1?', stretched ×'+cmp.mag:'')+'. Crosses are the white points.';
   cmLegend();$('cm-note').textContent=hint;
   if(reframe||!cmp.keepFrame){cmp.view.size();cmFrame();cmp.keepFrame=true;}cmp.view.request();}

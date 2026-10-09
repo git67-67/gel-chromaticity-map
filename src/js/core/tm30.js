@@ -15,9 +15,9 @@ function xyzToUCS(xyz,Aw,whiteRGBc){
   const rgb=mulv(CAM.M,xyz),rgbw=mulv(CAM.M,whiteRGBc.xyzw);
   const rc=[rgb[0]*100/rgbw[0],rgb[1]*100/rgbw[1],rgb[2]*100/rgbw[2]],p=mulv(CAM.H,mulv(CAM.Mi,rc)),pa=p.map(camComp);
   const a=pa[0]-12*pa[1]/11+pa[2]/11,b=(pa[0]+pa[1]-2*pa[2])/9,h=(Math.atan2(b,a)*180/Math.PI+360)%360;
-  const A=camAchrom(pa),J=100*Math.pow(A/Aw,CAM.c*CAM_z),et=0.25*(Math.cos(h*Math.PI/180+2)+3.8);
-  const t=(50000/13*CAM.Nc*CAM_Nbb*et*Math.hypot(a,b))/(pa[0]+pa[1]+1.05*pa[2]);
-  const C=Math.pow(t,0.9)*Math.sqrt(J/100)*Math.pow(1.64-Math.pow(0.29,CAM_n),0.73),M=C*Math.pow(CAM_FL,0.25);
+  const A=Math.max(0,camAchrom(pa)),J=100*Math.pow(A/Aw,CAM.c*CAM_z),et=0.25*(Math.cos(h*Math.PI/180+2)+3.8);
+  const t=(50000/13*CAM.Nc*CAM_Nbb*et*Math.hypot(a,b))/Math.max(1e-9,pa[0]+pa[1]+1.05*pa[2]);
+  const C=Math.pow(Math.max(0,t),0.9)*Math.sqrt(J/100)*Math.pow(1.64-Math.pow(0.29,CAM_n),0.73),M=C*Math.pow(CAM_FL,0.25);
   const Jp=1.7*J/(1+0.007*J),Mp=Math.log(1+0.0228*M)/0.0228,hr=h*Math.PI/180;
   return[Jp,Mp*Math.cos(hr),Mp*Math.sin(hr),h];}
 const CES_W=(()=>{const w=[new Float64Array(99*Q5),new Float64Array(99*Q5),new Float64Array(99*Q5)];
