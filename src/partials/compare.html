@@ -5,11 +5,13 @@
     <section class="panel">
       <h2>Light A (from)</h2>
       <div id="cm-pickA"></div>
+      <div class="synbox" id="cm-synA"></div>
       <div class="readout" id="cm-readA"></div>
     </section>
     <section class="panel">
       <div class="ph"><h2>Light B (to)</h2><button class="btn sm" id="cm-swap" title="Swap A and B">⇄ Swap</button></div>
       <div id="cm-pickB"></div>
+      <div class="synbox" id="cm-synB"></div>
       <div class="row" style="margin-top:8px"><button class="btn sm" id="cm-ref">Use the ideal reference light for A</button></div>
       <div class="readout" id="cm-readB"></div>
     </section>
@@ -106,6 +108,19 @@
         <div id="o1-tab" style="max-height:420px;overflow:auto"></div>
         <div class="row" style="margin-top:8px"><button class="btn sm" id="o1-more" hidden>Show more</button></div>
         <p class="hint">“Each light’s own ideal reference” compares the filter under every light with the same filter under a perfectly rendering light of the same colour temperature, so the ranking shows which lights show this filter most faithfully. With “light A” the ranking shows which lights are closest to (or furthest from) A. Click a column heading to sort by it, and click a light’s name to open it in the LED library. Colour dots show the colour the filter has under each light (left: reference, right: that light); in the brightness view they are darkened by how much light gets through.</p>
+      </div>
+      <div class="panel" id="m1-p">
+        <h2>Find a filter for a colour</h2>
+        <p class="hint" style="margin-top:0">Pick a filter that gives the colour you want under light A (for example your 2700 K LED), then find the filters that give the closest colour under light B (for example a 6500 K LED). Lights A and B are the ones chosen at the top, library or synthetic with the sliders.</p>
+        <div class="toolrow">
+          <input type="search" id="m1-fq" placeholder="Search filter…" aria-label="Search filter" style="max-width:150px"><select id="m1-f" aria-label="Filter under light A" style="max-width:220px"></select><button class="btn sm" id="m1-use">Use the selected one</button>
+          <label class="chk" for="m1-mode">Match <select id="m1-mode"><option value="colour">colour only (Δu′v′)</option><option value="both">colour and brightness (ΔE)</option></select></label>
+        </div>
+        <div id="m1-sum"></div>
+        <canvas id="m1-cv" class="sp" aria-label="Colours of all filters under light B, around the target colour"></canvas>
+        <div id="m1-tab" style="max-height:420px;overflow:auto"></div>
+        <div class="row" style="margin-top:8px"><button class="btn sm" id="m1-more" hidden>Show more</button></div>
+        <p class="hint">The colour is the colour of the light that leaves the filter, in u′v′, so a match means the two lights look the same side by side. It is not corrected for the eye adapting to a warmer or cooler white. “Light out” is the share of the bare light that gets through, at equal lumens of the two bare lights; a filter that matches in colour can still need more or less light. In the chart the cross is the target, the dashed ring is where the same filter lands under B, and the dots are the filters under B; the ringed dot is the best match.</p>
       </div>
       <div class="panel"><h2 id="cm-pairs-h">Biggest changes between A and B</h2><div class="pairs" id="cm-pairs"></div>
         <p class="hint" id="cm-pairs-hint"></p></div>

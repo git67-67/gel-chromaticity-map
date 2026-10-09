@@ -67,8 +67,10 @@ lab/tabs.js
 led/plots.js
 led/tab.js
 led/compare.js
+led/synthetic.js
 led/space3d.js
 led/onefilter.js
+led/match.js
 
 # --- start-up, must be last ---
 boot.js

@@ -4,12 +4,13 @@ const cmp={A:'std:LED-B3',B:'',mode:'uv',mag:1,metric:'shift',equal:'lumen',spac
 const cmQ={}; // quality cache for reference lights
 function cmLight(id){ // -> {id,name,spd,q} or null
   if(!id)return null;
-  if(id.startsWith('ref:')){const base=LED.items.get(id.slice(4)),r=base&&ledReference(base);if(!r)return null;
+  if(id.startsWith('ref:')){const bid=id.slice(4),base=bid.startsWith('syn:')?synItem(bid):LED.items.get(bid),r=base&&ledReference(base);if(!r)return null;
     const key=id+'|'+base.q.cct;if(!cmQ[key])cmQ[key]=quality(r.spd);return{id,name:'Ideal reference for '+base.name+' ('+Math.round(r.cct)+' K)',spd:r.spd,q:cmQ[key]};}
+  if(id.startsWith('syn:'))return synItem(id);
   const it=LED.items.get(id);return it?{id,name:it.name,spd:it.spd,q:it.q}:null;}
 const cmSet=(k,id)=>{cmp[k]=id;cmp.keepFrame=false;cmpUpdate(true);};
-const cmPickA=mountPicker($('cm-pickA'),{get:()=>cmp.A,set:id=>cmSet('A',id)});
-const cmPickB=mountPicker($('cm-pickB'),{get:()=>cmp.B&&!cmp.B.startsWith('ref:')?cmp.B:'',set:id=>cmSet('B',id),text:()=>cmp.B&&cmp.B.startsWith('ref:')?'Ideal reference light (CRI 100)':''});
+const cmPickA=mountPicker($('cm-pickA'),{get:()=>cmp.A,set:id=>cmSet('A',id),text:()=>cmp.A&&cmp.A.startsWith('syn:')?'Synthetic light (set below)':''});
+const cmPickB=mountPicker($('cm-pickB'),{get:()=>cmp.B&&!cmp.B.startsWith('ref:')&&!cmp.B.startsWith('syn:')?cmp.B:'',set:id=>cmSet('B',id),text:()=>cmp.B&&cmp.B.startsWith('ref:')?'Ideal reference light (CRI 100)':cmp.B&&cmp.B.startsWith('syn:')?'Synthetic light (set below)':''});
 const cmReadout=(L)=>{if(!L)return'<div class="note">Pick a light.</div>';const q=L.q,a=q.cri&&q.cri.Ra,t=q.tm30;
   return[['CCT',fmtK(q.cct)],['Duv',f0(q.duv,4)],['CRI Ra',f0(a,0)],['R9',f0(q.cri&&q.cri.R[8],0)],['Rf',f0(t&&t.Rf,0)],['Rg',f0(t&&t.Rg,0)]].map(([k,v])=>`<div class="kv"><span>${k}</span><b>${v}</b></div>`).join('');};
 
@@ -112,7 +113,7 @@ function cmFrame(){const R=cmp.res;if(!R||!R.rows.length)return;const v=cmp.view
   const sp=Math.max(c-a,d-b,.02),hs=sp/2+sp*.08,mx=(a+c)/2,my=(b+d)/2;v.frame(mx-hs*1.15,my-hs,mx+hs*1.15,my+hs);}
 
 /* ---- candidates (same CCT and Duv as A) ---- */
-function cmCands(){const A=LED.items.get(cmp.A);cmp.cands=[];const el=$('cm-cands');
+function cmCands(){const A=cmp.A.startsWith('syn:')?synItem(cmp.A):LED.items.get(cmp.A);cmp.cands=[];const el=$('cm-cands');
   if(!A||!A.q.ok){el.innerHTML='<div class="note">Light A needs a CCT (it is too far from the Planckian locus) to look for partners.</div>';return;}
   const tc=parseFloat($('cm-tc').value),td=parseFloat($('cm-td').value);cmp.tolC=isFinite(tc)?tc:150;cmp.tolD=isFinite(td)?td:.003;
   const list=[];
@@ -181,19 +182,19 @@ function cmLegend(){const el=$('cm-mleg');if(!el)return;
 function cmpUpdate(reframe){if(!cmp.visible){cmp.dirty=true;return;}cmp.dirty=false;
   if(!cmp.B&&cmp.A)cmp.B='ref:'+cmp.A;
   if(cmp.B&&cmp.B.startsWith('ref:'))cmp.B='ref:'+cmp.A;
-  cmPickA.refresh();cmPickB.refresh();
+  cmPickA.refresh();cmPickB.refresh();if(typeof synSync==='function')synSync();
   const LA=cmLight(cmp.A),LB=cmLight(cmp.B);$('cm-readA').innerHTML=cmReadout(LA);$('cm-readB').innerHTML=cmReadout(LB);
   cmpCompute();cmCands();cmRenderSide();cmRenderList();cmRenderPairs();
   if(cmp.res&&(!cmp.sel||!cmp.res.byId.has(cmp.sel)))cmp.sel=cmRows()[0]?.f.id||null;
-  cmRenderDetail();cmDrawSide();if(typeof o1Update==='function')o1Update();if(typeof c3Request==='function'){c3Request();$('cm-3dlab').textContent=cmSpaceName()+' ('+c3Axes().x+', '+c3Axes().y+', '+c3Axes().z+')';}
+  cmRenderDetail();cmDrawSide();if(typeof o1Update==='function')o1Update();if(typeof m1Update==='function')m1Update();if(typeof c3Request==='function'){c3Request();$('cm-3dlab').textContent=cmSpaceName()+' ('+c3Axes().x+', '+c3Axes().y+', '+c3Axes().z+')';}
   const hint='Open dots are the colours under A, filled dots under B (drawn in the colour of the light they give). The line joins the two'+(cmp.mag>1?', stretched ×'+cmp.mag:'')+'. Crosses are the white points.';
   cmLegend();$('cm-note').textContent=hint;
   if(reframe||!cmp.keepFrame){cmp.view.size();cmFrame();cmp.keepFrame=true;}cmp.view.request();}
 function cmpRefresh(){if(cmp.visible){cmp.dirty=true;cmpUpdate(false);}else cmp.dirty=true;}
-LED.listeners.push(()=>{if(cmp.A&&!LED.items.has(cmp.A))cmp.A='std:LED-B3';if(cmp.B&&!cmp.B.startsWith('ref:')&&!LED.items.has(cmp.B))cmp.B='';cmpRefresh();});
+LED.listeners.push(()=>{if(cmp.A&&!cmp.A.startsWith('syn:')&&!LED.items.has(cmp.A))cmp.A='std:LED-B3';if(cmp.B&&!cmp.B.startsWith('ref:')&&!cmp.B.startsWith('syn:')&&!LED.items.has(cmp.B))cmp.B='';cmpRefresh();});
 
 /* ---- controls ---- */
-$('cm-swap').onclick=()=>{const A=cmp.A,B=cmp.B;if(!B||B.startsWith('ref:'))return;cmp.A=B;cmp.B=A;cmp.keepFrame=false;cmpUpdate(true);};
+$('cm-swap').onclick=()=>{const A=cmp.A,B=cmp.B;if(!B||B.startsWith('ref:'))return;if(typeof synSwap==='function')synSwap();cmp.A=B.startsWith('syn:')?'syn:A':B;cmp.B=A.startsWith('syn:')?'syn:B':A;cmp.keepFrame=false;cmpUpdate(true);};
 $('cm-ref').onclick=()=>{cmp.B='ref:'+cmp.A;cmpUpdate(true);};
 function cmSpace(s){cmp.mode=cmp.view.mode=s;$('cm-uv').setAttribute('aria-pressed',s==='uv');$('cm-xy').setAttribute('aria-pressed',s==='xy');cmp.view.V.user=false;cmp.view.fit();cmFrame();cmp.view.request();}
 $('cm-uv').onclick=()=>cmSpace('uv');$('cm-xy').onclick=()=>cmSpace('xy');

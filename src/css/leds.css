@@ -67,3 +67,5 @@
 
 .cmp-tab th.srt{cursor:pointer;user-select:none;white-space:nowrap}.cmp-tab th.srt:hover{color:var(--fg)}
 .o1-lnk{color:inherit;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}.o1-lnk:hover{color:var(--accent);text-decoration-color:currentColor}
+.synbox{margin-top:8px}.synctl{display:grid;gap:6px;margin-top:6px}.synctl label{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}.synctl input[type=range]{flex:1 1 120px;min-width:100px}.synctl input[type=number]{width:84px}
+#m1-sum .kv b{white-space:normal;overflow-wrap:anywhere}#m1-sum .kv{margin-bottom:6px}
