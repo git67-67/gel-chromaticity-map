@@ -29,7 +29,7 @@
 .cmp-tab td:first-child{font-family:var(--ui)}
 .cmp-tab tr.cand{cursor:pointer}.cmp-tab tr.cand:hover{background:var(--hover)}.cmp-tab tr.cand[aria-current="true"]{background:var(--hover);box-shadow:inset 3px 0 0 var(--accent)}
 .dsw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
-.pairs{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.pairs{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:8px}
 .pair{border:1px solid var(--line);border-radius:6px;overflow:hidden;cursor:pointer;background:var(--panel);text-align:left;padding:0}
 .pair:hover,.pair[aria-current="true"]{border-color:var(--accent)}
 .pair .sws{display:grid;grid-template-columns:1fr 1fr;height:34px}

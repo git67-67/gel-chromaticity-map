@@ -1,6 +1,6 @@
 {
   "name": "gel-chromaticity-map",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "private": true,
   "description": "Chromaticity of lighting filters and pigments under any light source, an LED library with CRI and TM-30, and a lab for comparing chromatic adaptation transforms.",
   "scripts": {
