@@ -88,6 +88,12 @@ with sync_playwright() as p:
             check(tag + f' [{sp}] pairs tiles and summary mention the apparent change', pg.locator('#cm-pairs .pair').count() == 24 and 'Apparent change' in pg.inner_text('#cm-sum') and 'ΔE' in pg.inner_text('#cm-pairs'), pg.inner_text('#cm-pairs-h'))
             drawn = pg.evaluate("(()=>{const c=document.getElementById('cm-3d'),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;const bg=[d[0],d[1],d[2]];for(let i=0;i<d.length;i+=4)if(Math.abs(d[i]-bg[0])+Math.abs(d[i+1]-bg[1])+Math.abs(d[i+2]-bg[2])>30)n++;return n})()")
             check(tag + f' [{sp}] 3D view is drawn', drawn > 800, str(drawn))
+        def c3sig():
+            return pg.evaluate("(()=>{const c=document.getElementById('cm-3d'),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let h=0;for(let i=0;i<d.length;i+=4)h=(h*31+d[i]+d[i+1]*3+d[i+2]*7)|0;return h})()")
+        pg.select_option('#c3-dot', 'true'); pg.wait_for_timeout(200); s1 = c3sig()
+        pg.select_option('#c3-dot', 'metric'); pg.wait_for_timeout(200); s2 = c3sig()
+        check(tag + ' 3D dot colour option changes the drawing', s1 != s2, f'{s1} {s2}')
+        pg.select_option('#c3-dot', 'true'); pg.wait_for_timeout(100)
         pg.click('#c3-top'); pg.wait_for_timeout(150); pg.click('#c3-side'); pg.wait_for_timeout(150); pg.click('#c3-3d'); pg.wait_for_timeout(150)
         pg.select_option('#cm-space', 'luv'); pg.select_option('#cm-wp', 'none'); pg.wait_for_timeout(100)
         pg.select_option('#cm-metric', 'shift'); pg.evaluate("st.filters.delete('flat50');cmpUpdate(false)"); pg.wait_for_timeout(100)

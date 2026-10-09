@@ -1,7 +1,7 @@
 /* 3D view of the apparent change in LED compare: every item under light A (open dot) and light B (filled dot), joined by a line,
    in CIELUV (u*, v*, L*) or CAM02-UCS (a', b', J'), the same space as the ΔE numbers. Drag to rotate, wheel to zoom.
    Reads cmp.res.rows[].P = [[L,a,b] under A, [L,a,b] under B] and cmp.res.PW (the two white points). */
-const c3={yaw:-0.7,pitch:0.5,zoom:1,pts:[],drag:null,raf:0,cv:$('cm-3d')};
+const c3={yaw:-0.7,pitch:0.5,zoom:1,dot:'true',pts:[],drag:null,raf:0,cv:$('cm-3d')};
 function c3Axes(){return cmp.space==='cam'?{x:"a′",y:"b′",z:'J′'}:{x:'u*',y:'v*',z:'L*'};}
 function c3Draw(){c3.raf=0;const R=cmp.res,cv=c3.cv;if(!cv||!$('cm-3dp').offsetParent)return;if(!cols.fg)readCols();
   const {c,w,h}=prepCanvas(cv,Math.round(Math.min(460,Math.max(300,cv.parentElement.clientWidth*.75))));c3.pts=[];
@@ -22,11 +22,13 @@ function c3Draw(){c3.raf=0;const R=cmp.res,cv=c3.cv;if(!cv||!$('cm-3dp').offsetP
   const rng=cmRange(),list=R.rows.map(r=>({r,a:pr(r.P[0][1],r.P[0][2],r.P[0][0]),b:pr(r.P[1][1],r.P[1][2],r.P[1][0])})).sort((u,v)=>(u.b.d+u.a.d)-(v.b.d+v.a.d));
   c.lineWidth=1;for(const o of list){c.strokeStyle=cols.fg;c.globalAlpha=.3;c.beginPath();c.moveTo(o.a.x,o.a.y);c.lineTo(o.b.x,o.b.y);c.stroke();}
   c.globalAlpha=1;
-  for(const o of list){const sel=o.r.f.id===cmp.sel;
-    c.strokeStyle=cols.fg;c.globalAlpha=.6;c.beginPath();c.arc(o.a.x,o.a.y,2.4,0,7);c.stroke();c.globalAlpha=1;
-    c.fillStyle=cmSigned(o.r)==null?cmpColor(o.r.B):cmDiv(cmSigned(o.r)/rng);
-    c.strokeStyle=sel?cols.fg:cols.plotbg;c.lineWidth=sel?2.2:1.1;c.beginPath();c.arc(o.b.x,o.b.y,sel?5.5:3.6,0,7);c.fill();c.stroke();
-    c3.pts.push({x:o.b.x,y:o.b.y,id:o.r.f.id});}
+  const tr=c3.dot==='true';   // true: each dot in the colour and brightness it really has (white of the bare light = full brightness)
+  for(const o of list){const sel=o.r.f.id===cmp.sel,r=o.r;
+    if(tr){c.fillStyle=cmpColorY(r.A,r.yA,1);c.strokeStyle=cols.muted;c.globalAlpha=.9;c.lineWidth=1;c.beginPath();c.arc(o.a.x,o.a.y,2.8,0,7);c.fill();c.stroke();c.globalAlpha=1;}
+    else{c.strokeStyle=cols.fg;c.globalAlpha=.6;c.beginPath();c.arc(o.a.x,o.a.y,2.4,0,7);c.stroke();c.globalAlpha=1;}
+    c.fillStyle=tr?cmpColorY(r.B,Math.min(1,r.yB*R.rate),1):(cmSigned(r)==null?cmpColor(r.B):cmDiv(cmSigned(r)/rng));
+    c.strokeStyle=sel?cols.fg:(tr?cols.muted:cols.plotbg);c.lineWidth=sel?2.2:1.1;c.beginPath();c.arc(o.b.x,o.b.y,sel?5.5:3.8,0,7);c.fill();c.stroke();
+    c3.pts.push({x:o.b.x,y:o.b.y,id:r.f.id});}
   // white points
   [[R.PW[0],lc.k[0],'A'],[R.PW[1],lc.k[1],'B']].forEach(([P,col,n])=>{const q=pr(P[1],P[2],P[0]);c.strokeStyle=col;c.lineWidth=2;c.beginPath();c.moveTo(q.x-6,q.y);c.lineTo(q.x+6,q.y);c.moveTo(q.x,q.y-6);c.lineTo(q.x,q.y+6);c.stroke();c.fillStyle=col;c.font='bold 11px '+FM;c.textAlign='left';c.fillText('white '+n,q.x+8,q.y-6);});}
 function c3Request(){if(!c3.raf)c3.raf=requestAnimationFrame(c3Draw);}
@@ -44,5 +46,6 @@ function c3View(name){c3.zoom=1;if(name==='top'){c3.yaw=0;c3.pitch=Math.PI/2;}el
   cv.addEventListener('pointerup',e=>{const was=c3.drag;c3.drag=null;if(was&&!was.moved){const [x,y]=pos(e);let best=null,bd=144;for(const q of c3.pts){const d=(q.x-x)**2+(q.y-y)**2;if(d<bd){bd=d;best=q;}}if(best)cmSelect(best.id);}});
   cv.addEventListener('pointerleave',()=>{tip.hidden=true;});
   cv.addEventListener('wheel',e=>{e.preventDefault();c3.zoom=Math.max(.4,Math.min(6,c3.zoom*(e.deltaY<0?1.12:1/1.12)));c3Request();},{passive:false});
+  $('c3-dot').onchange=e=>{c3.dot=e.target.value;c3Request();};
   $('c3-3d').onclick=()=>c3View('3d');$('c3-top').onclick=()=>c3View('top');$('c3-side').onclick=()=>c3View('side');
   new ResizeObserver(()=>{if(cmp.visible)c3Request();}).observe($('cm-3dwrap'));})();
