@@ -10,7 +10,7 @@ The code is licensed under the GNU AGPL-3.0-or-later. The **spectra are not your
 
 If you cannot clear either, publish without the data: delete the file, remove its lines from `src/js/manifest.txt` (the `data` line and the `app/datasets/….js` line), run `python3 tools/build.py`, and tell users to build their own with the scripts in `tools/`.
 
-The AGPL requires that people who use a modified copy over a network can get its source. The unmodified page links to this repository; if you host a modified version, change that link to your own source.
+The AGPL requires that people who use a modified copy over a network can get its source. If you host a modified version, offer its source, for example with a link in the page footer.
 
 ## 2. Create the repository
 
