@@ -871,7 +871,7 @@
       }
       if (!best) throw new I1Error('CALFAIL', 'White calibration did not settle.');
       const white36 = bands36({ coef: this.cal.coef, index: this.cal.index, emis: new Float64Array(NBAND).fill(1) }, best.white.avg);
-      const ref = this.whiteRef36(), cf = Array.from(white36, (w, i) => w < 1000 ? ref[i] / 1000 : ref[i] / w);
+      const ref = this.whiteRef36(), cf = Array.from(white36, (w, i) => w > 0 ? ref[i] / w : 0);   // same units for sample and white, so R = sample * ref / white
       this.refl = { t: best.tq, whiteAbs: Float64Array.from(best.white.avg), white36, ref36: ref, calFactor36: cf, peakCounts: best.white.highest * best.tq, date: Date.now(), inconsistent: !!(best.white.rv & 1) };
       o.progress('white calibration done', 1);
       return { inttime: best.tq, peakCounts: this.refl.peakCounts, scale: best.scale, date: this.refl.date };

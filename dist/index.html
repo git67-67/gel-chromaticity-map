@@ -2858,6 +2858,7 @@ function helpInit(){const pop=document.createElement('div');pop.id='help-pop';po
 helpInit();
 
 /* ---- instrument/i1pro-core.js ---- */
+/* AGPL-3.0-or-later, see LICENSE. */
 /* i1pro-core.js — browser/Node driver for the X-Rite / Gretag-Macbeth i1 Pro (Rev A–D) over WebUSB.
  *
  * Ported from ArgyllCMS spectro/i1pro_imp.c (USB command set, EEPROM key table, linearisation,
@@ -3730,7 +3731,7 @@ helpInit();
       }
       if (!best) throw new I1Error('CALFAIL', 'White calibration did not settle.');
       const white36 = bands36({ coef: this.cal.coef, index: this.cal.index, emis: new Float64Array(NBAND).fill(1) }, best.white.avg);
-      const ref = this.whiteRef36(), cf = Array.from(white36, (w, i) => w < 1000 ? ref[i] / 1000 : ref[i] / w);
+      const ref = this.whiteRef36(), cf = Array.from(white36, (w, i) => w > 0 ? ref[i] / w : 0);   // same units for sample and white, so R = sample * ref / white
       this.refl = { t: best.tq, whiteAbs: Float64Array.from(best.white.avg), white36, ref36: ref, calFactor36: cf, peakCounts: best.white.highest * best.tq, date: Date.now(), inconsistent: !!(best.white.rv & 1) };
       o.progress('white calibration done', 1);
       return { inttime: best.tq, peakCounts: this.refl.peakCounts, scale: best.scale, date: this.refl.date };
@@ -3787,6 +3788,7 @@ helpInit();
 });
 
 /* ---- instrument/i1pro-sim.js ---- */
+/* AGPL-3.0-or-later, see LICENSE. */
 /* i1pro-sim.js — software stand-in for an i1 Pro Rev D, speaking the same vendor requests as the real USB device.
  * Used for the page's Demo mode and for Node self-tests. EEPROM image is the one recorded from S/N 715997. */
 (function (root, factory) {
@@ -3860,6 +3862,7 @@ helpInit();
 });
 
 /* ---- instrument/i1pro-plot.js ---- */
+/* AGPL-3.0-or-later, see LICENSE. */
 /* i1pro-plot.js - small interactive line/bar plot on a <canvas>: hover read-out, drag to zoom, Ctrl+wheel zoom, Shift+drag pan,
    double-click to reset, two y axes, peak markers, logarithmic axis. No dependencies. Exposes window.I1ProPlot. */
 (function (root) {
@@ -4330,6 +4333,7 @@ window.I1P_DEMO_EEPROM = "AAAk/f///0X///9F////P////zv///9E////Pv///0P///9B////Rf
 });
 
 /* ---- instrument/measure-tab.js ---- */
+/* AGPL-3.0-or-later, see LICENSE. */
 /* Measure tab: connect the i1 Pro, measure a light, show its numbers, save it with its calibration, add it to the LED library.
    Needs the colour map globals: quality(), LED, ledMake(), ledPut(), ledChanged(), showTab(). Browser only. */
 (function () {
@@ -4402,10 +4406,12 @@ window.I1P_DEMO_EEPROM = "AAAk/f///0X///9F////P////zv///9E////Pv///0P///9B////Rf
       const beyond = g('ms-beyond').value;
       let result, spectrum, numbers = null, calWhite = null;
       if (type === 'pigment') {
+        if (sim) sim.mode = 'reflective';
         result = await dev.measureReflective({ readTime: 1.0, progress: m => status(m) });
         spectrum = MC.toSpectrum(result, { beyond, normalise: false });
         calWhite = whiteSnapshot();
       } else {
+        if (sim) sim.mode = 'emission';
         result = await dev.measure({ readTime: 1.0 });
         spectrum = MC.toSpectrum(result, { beyond });
         numbers = MC.lightNumbers(spectrum, quality);
@@ -4423,6 +4429,7 @@ window.I1P_DEMO_EEPROM = "AAAk/f///0X///9F////P////zv///9E////Pv///0P///9B////Rf
   g('ms-white').onclick = async () => {
     try {
       status('White tile calibration… place the white tile in the measuring head.');
+      if (sim) sim.mode = 'reflective';
       await dev.calibrateWhite({ progress: m => status(m) });
       status('White tile calibration done.', 'ok');
     } catch (e) { status(explain(e), 'err'); }

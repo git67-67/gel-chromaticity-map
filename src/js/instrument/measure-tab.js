@@ -71,10 +71,12 @@
       const beyond = g('ms-beyond').value;
       let result, spectrum, numbers = null, calWhite = null;
       if (type === 'pigment') {
+        if (sim) sim.mode = 'reflective';
         result = await dev.measureReflective({ readTime: 1.0, progress: m => status(m) });
         spectrum = MC.toSpectrum(result, { beyond, normalise: false });
         calWhite = whiteSnapshot();
       } else {
+        if (sim) sim.mode = 'emission';
         result = await dev.measure({ readTime: 1.0 });
         spectrum = MC.toSpectrum(result, { beyond });
         numbers = MC.lightNumbers(spectrum, quality);
@@ -92,6 +94,7 @@
   g('ms-white').onclick = async () => {
     try {
       status('White tile calibration… place the white tile in the measuring head.');
+      if (sim) sim.mode = 'reflective';
       await dev.calibrateWhite({ progress: m => status(m) });
       status('White tile calibration done.', 'ok');
     } catch (e) { status(explain(e), 'err'); }

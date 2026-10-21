@@ -38,6 +38,8 @@ await ok('a pigment measurement returns 36 reflectance values, finite and non-ne
   assert.equal(r.kind, 'reflective');
   assert.equal(r.s36.length, 36);
   assert.ok(r.s36.every(x => Number.isFinite(x) && x >= 0), 'bad reflectance values');
+  assert.ok(r.s36.every(x => x <= 1.3), 'reflectance above the white tile: ' + Math.max(...r.s36).toFixed(3));
+  assert.ok(r.s36.every(x => x >= 0.02), 'reflectance implausibly low: ' + Math.min(...r.s36).toFixed(3));
 });
 
 console.log(fail ? `\n${fail} FAILED` : '\nall passed');
