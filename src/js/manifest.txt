@@ -75,4 +75,12 @@ led/match.js
 
 app/help.js
 # --- start-up, must be last ---
+instrument/i1pro-core.js
+instrument/i1pro-sim.js
+instrument/i1pro-plot.js
+instrument/i1pro-demo-eeprom.js
+instrument/calibration-store.js
+instrument/calibration-logic.js
+instrument/measure-core.js
+instrument/measure-tab.js
 boot.js

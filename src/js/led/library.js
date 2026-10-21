@@ -50,7 +50,7 @@ function ledRemove(id){LED.items.delete(id);ledChanged();ledSaveSoon();}
 
 /* ---- persistence (IndexedDB; silently off where unavailable) ---- */
 const LED_DB='gel-map',LED_STORE='leds';
-function ledDB(){return new Promise((res,rej)=>{try{const r=indexedDB.open(LED_DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(LED_STORE,{keyPath:'id'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}catch(e){rej(e);}});}
+function ledDB(){return new Promise((res,rej)=>{try{const r=indexedDB.open(LED_DB,2);r.onupgradeneeded=()=>{const db=r.result;for(const s of [LED_STORE,'measurements','calibrations'])if(!db.objectStoreNames.contains(s))db.createObjectStore(s,{keyPath:'id'});};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}catch(e){rej(e);}});}
 let ledSaveT=0;
 function ledSaveSoon(){if(!LED.persist)return;clearTimeout(ledSaveT);ledSaveT=setTimeout(ledSave,400);}
 async function ledSave(){try{const db=await ledDB(),tx=db.transaction(LED_STORE,'readwrite'),os=tx.objectStore(LED_STORE);os.clear();

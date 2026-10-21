@@ -1,0 +1,57 @@
+<div id="view-meas" hidden>
+<div class="lab">
+  <p class="intro">Measure a light (emission) or a pigment sample (reflective) with the i1 Pro. Connect it directly in Chrome or Edge. Each measurement is saved with the calibration it was made with. Lights show their colour numbers at once and can go to the LED library.</p>
+  <div class="grid">
+    <section class="stage">
+      <div class="panel">
+        <div class="row"><button class="btn primary" id="ms-connect">Connect i1 Pro</button><button class="btn" id="ms-demo">Demo (no hardware)</button><button class="btn" id="ms-disc" disabled>Disconnect</button><span class="note" id="ms-who"></span></div>
+        <div class="status" id="ms-status" role="status"></div>
+      </div>
+      <div class="panel" id="ms-result"><h2>Last measurement</h2><div class="empty">Nothing measured yet.</div></div>
+      <div class="panel"><h2>Saved measurements <span id="ms-count" style="font-weight:400"></span></h2><div id="ms-list"></div></div>
+    </section>
+    <aside class="side">
+      <section class="panel">
+        <h2>Measure</h2>
+        <div class="field"><label for="ms-name">Name</label><input type="text" id="ms-name" placeholder="e.g. Warm LED, bench 2"></div>
+        <div class="field"><label for="ms-comment">Comment</label><textarea id="ms-comment" rows="3" placeholder="Distance, lamp setting, anything you will want to remember"></textarea></div>
+        <div class="field"><label for="ms-type">Type</label><select id="ms-type"><option value="light">Light (emission)</option><option value="pigment">Pigment (reflective)</option></select></div>
+        <div class="field"><label for="ms-beyond">Beyond 730 nm (not measured)</label><select id="ms-beyond"><option value="hold">Hold last value (default)</option><option value="fade">Fade smoothly to zero</option><option value="zero">Set to zero</option></select></div>
+        <div class="row" style="margin-top:8px"><button class="btn" id="ms-dark" disabled>Dark calibration</button><span class="chip" id="ms-darkchip">not done</span></div>
+        <div class="row" style="margin-top:8px" id="ms-whiterow" hidden><button class="btn" id="ms-white" disabled>White tile calibration</button><span class="chip" id="ms-whitechip">not done</span></div>
+        <p class="hint" id="ms-whitehint" hidden>For pigments: place the white tile (its reflectance is read from the instrument) in the measuring head, then calibrate.</p>
+        <div class="row" style="margin-top:8px"><button class="btn primary" id="ms-meas" disabled>Measure</button><button class="btn" id="ms-save" disabled>Save</button><button class="btn" id="ms-tolib" disabled>Add to LED library</button></div>
+      </section>
+      <section class="panel">
+        <h2>Calibration in use</h2>
+        <div class="readout" id="ms-cal"><div class="kv"><span>Source</span><b>none</b></div><div class="kv"><span>Absolute</span><b>none</b></div></div>
+        <div class="row" style="margin-top:8px"><button class="btn sm" id="ms-cal-clear">Clear calibration</button></div>
+      </section>
+      <section class="panel">
+        <h2>Blackbody, one temperature</h2>
+        <p class="hint">Measure a reference lamp of known colour temperature, then set its temperature here.</p>
+        <div class="field"><label for="ms-bb1-T">Lamp temperature (K)</label><input type="number" id="ms-bb1-T" value="2856" min="1000" max="20000"></div>
+        <div class="row"><button class="btn" id="ms-bb1">Use last light as the lamp</button></div>
+      </section>
+      <section class="panel">
+        <h2>Blackbody, several temperatures</h2>
+        <p class="hint">Measure at least two lamps. Each is added with its estimated temperature. Give the true temperature of one (optional) and the rest are fitted.</p>
+        <div class="field"><label for="ms-bbs-est">Estimated temperature (K)</label><input type="number" id="ms-bbs-est" value="2856" min="1000" max="20000"></div>
+        <div class="row"><button class="btn" id="ms-bbs-add">Add last light</button><button class="btn sm" id="ms-bbs-reset">Reset</button></div>
+        <div id="ms-bbs-list" class="note" style="margin-top:6px"></div>
+        <div class="field" style="margin-top:8px"><label for="ms-bbs-anchor">Known true temperature for</label><select id="ms-bbs-anchor"><option value="">none (fit without anchor)</option></select></div>
+        <div class="field"><label for="ms-bbs-anchorK">Its true temperature (K)</label><input type="number" id="ms-bbs-anchorK" value="2856" min="1000" max="20000"></div>
+        <div class="row"><button class="btn" id="ms-bbs-fit">Fit and apply</button></div>
+      </section>
+      <section class="panel">
+        <h2>Absolute level</h2>
+        <p class="hint">Enter the meter reading taken at the same time as the last light measurement, and the value the source is known to have.</p>
+        <div class="field"><label for="ms-abs-ref">Known quantity</label><select id="ms-abs-ref"><option value="luminance">Luminance (cd/m²)</option><option value="irradiance">Irradiance (mW/m²)</option><option value="laser">Laser power (mW)</option><option value="factor">Direct factor</option></select></div>
+        <div class="field"><label for="ms-abs-meas">Meter reading (same unit)</label><input type="number" id="ms-abs-meas" step="any"></div>
+        <div class="field"><label for="ms-abs-target">Known value</label><input type="number" id="ms-abs-target" step="any"></div>
+        <div class="row"><button class="btn" id="ms-abs-apply">Apply</button></div>
+      </section>
+    </aside>
+  </div>
+</div>
+</div>
