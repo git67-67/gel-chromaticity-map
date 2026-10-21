@@ -9,5 +9,5 @@
     "test": "python3 tools/build.py && node tests/maths.mjs && python3 tests/smoke.py && python3 tests/leds.py 150 && python3 tests/pwa.py && python3 tests/persist.py && python3 tests/templates.py",
     "test:scale": "python3 tests/leds.py 1000"
   },
-  "license": "MIT"
+  "license": "AGPL-3.0-or-later"
 }

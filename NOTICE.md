@@ -1,6 +1,6 @@
 # Data notices
 
-The MIT licence in `LICENSE` covers the source code only. Check the terms of each data file before you publish or redistribute a copy of this repository.
+The AGPL-3.0-or-later licence in `LICENSE` covers the source code only. Check the terms of each data file before you publish or redistribute a copy of this repository.
 
 ## LEE Filters — not included
 

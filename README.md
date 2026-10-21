@@ -103,7 +103,7 @@ dist/                   the built page (index.html) plus manifest, icons and ser
 
 ## Data and licensing
 
-The **code** is under the MIT licence ([LICENSE](LICENSE)). The **built-in spectra are not covered by that licence**; see [NOTICE.md](NOTICE.md) before redistributing them.
+The **code** is under the GNU Affero General Public License v3.0 or later ([LICENSE](LICENSE)). The **built-in spectra are not covered by that licence**; see [NOTICE.md](NOTICE.md) before redistributing them.
 
 ## Contributing
 
