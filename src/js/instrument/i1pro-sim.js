@@ -1,3 +1,4 @@
+/* AGPL-3.0-or-later, see LICENSE. */
 /* i1pro-sim.js — software stand-in for an i1 Pro Rev D, speaking the same vendor requests as the real USB device.
  * Used for the page's Demo mode and for Node self-tests. EEPROM image is the one recorded from S/N 715997. */
 (function (root, factory) {

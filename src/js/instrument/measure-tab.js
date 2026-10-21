@@ -1,3 +1,4 @@
+/* AGPL-3.0-or-later, see LICENSE. */
 /* Measure tab: connect the i1 Pro, measure a light, show its numbers, save it with its calibration, add it to the LED library.
    Needs the colour map globals: quality(), LED, ledMake(), ledPut(), ledChanged(), showTab(). Browser only. */
 (function () {

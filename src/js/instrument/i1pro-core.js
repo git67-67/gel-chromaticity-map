@@ -1,3 +1,4 @@
+/* AGPL-3.0-or-later, see LICENSE. */
 /* i1pro-core.js — browser/Node driver for the X-Rite / Gretag-Macbeth i1 Pro (Rev A–D) over WebUSB.
  *
  * Ported from ArgyllCMS spectro/i1pro_imp.c (USB command set, EEPROM key table, linearisation,

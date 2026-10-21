@@ -1,3 +1,4 @@
+/* AGPL-3.0-or-later, see LICENSE. */
 /* i1pro-plot.js - small interactive line/bar plot on a <canvas>: hover read-out, drag to zoom, Ctrl+wheel zoom, Shift+drag pan,
    double-click to reset, two y axes, peak markers, logarithmic axis. No dependencies. Exposes window.I1ProPlot. */
 (function (root) {
