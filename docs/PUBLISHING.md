@@ -2,7 +2,7 @@
 
 ## 1. Before you publish: data licences
 
-The code is MIT-licensed. The **spectra are not yours or mine to relicense**; read [NOTICE.md](../NOTICE.md). In short:
+The code is licensed under the GNU AGPL-3.0-or-later. The **spectra are not yours or mine to relicense**; read [NOTICE.md](../NOTICE.md). In short:
 
 - No LEE data is in the repository (`data/lee.json` is git-ignored). Keep it that way unless LEE permits redistribution.
 - `data/pigments.json`: the owner has the rights to publish it.
@@ -10,7 +10,7 @@ The code is MIT-licensed. The **spectra are not yours or mine to relicense**; re
 
 If you cannot clear either, publish without the data: delete the file, remove its lines from `src/js/manifest.txt` (the `data` line and the `app/datasets/….js` line), run `python3 tools/build.py`, and tell users to build their own with the scripts in `tools/`.
 
-Also replace "the repository owner" in `LICENSE` with your name.
+The AGPL requires that people who use a modified copy over a network can get its source. The unmodified page links to this repository; if you host a modified version, change that link to your own source.
 
 ## 2. Create the repository
 
